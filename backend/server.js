@@ -12,16 +12,18 @@ const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 
-// CONNECT DB
+// CONNECT DATABASE
 connectDB();
 
-// ✅ FIXED CORS (IMPORTANT)
+// ✅ VERY IMPORTANT CORS FIX
 app.use(cors({
-  origin: "*",   // allow all (for now)
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  origin: "*",
 }));
 
+// ✅ HANDLE PREFLIGHT (THIS FIXES YOUR EXACT ERROR)
+app.options("*", cors());
+
+// BODY PARSER
 app.use(express.json());
 
 // ROUTES
@@ -37,7 +39,7 @@ app.get("/", (req, res) => {
   res.send("Diamond Square Backend Running 🚀");
 });
 
-// ✅ PORT FIX FOR RENDER
+// ✅ RENDER PORT FIX
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
