@@ -14,7 +14,9 @@ const app = express();   // CREATE APP FIRST
 
 connectDB(); // connect database
 
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);

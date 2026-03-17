@@ -1,34 +1,22 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 
-exports.registerUser = async (req, res) => {
+exports.register = async (req, res) => {
   try {
-    const { name, phone, flatNumber, password } = req.body;
-
-    const existingUser = await User.findOne({ phone });
-
-    if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const { name, email, password } = req.body;
 
     const user = new User({
       name,
-      phone,
-      flatNumber,
-      password: hashedPassword
+      email,
+      password,
     });
 
     await user.save();
 
-    res.status(201).json({
-      message: "User registered successfully"
-    });
-
+    res.status(201).json({ message: "User registered" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);   // VERY IMPORTANT
+    res.status(500).json({ message: "Server error" });
   }
 };
 const jwt = require("jsonwebtoken");
