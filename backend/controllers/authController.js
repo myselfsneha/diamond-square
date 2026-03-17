@@ -1,31 +1,45 @@
-const User = require("../models/user");
+const User = require("../models/User");   // ✅ FIXED (capital U)
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
+// ================= REGISTER =================
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // create user
     const user = new User({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
 
     await user.save();
 
-    res.status(201).json({ message: "User registered" });
+    res.status(201).json({ message: "User registered successfully" });
+
   } catch (error) {
-    console.error(error);   // VERY IMPORTANT
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
-const jwt = require("jsonwebtoken");
 
+
+// ================= LOGIN =================
 exports.loginUser = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { email, password } = req.body;   // ✅ FIXED (email instead of phone)
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -50,6 +64,7 @@ exports.loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };
