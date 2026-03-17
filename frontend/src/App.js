@@ -2,52 +2,41 @@ import React, { useState } from "react";
 import axios from "axios";
 
 function App() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const register = async () => {
     try {
       const res = await axios.post(
         "https://diamond-square-api.onrender.com/api/auth/register",
-        { name, email, password }
+        form
       );
-      alert("User Registered Successfully");
-      console.log(res.data);
+
+      alert(res.data.message);
     } catch (err) {
+      console.error(err);
       alert("Registration Failed");
-      console.log(err);
     }
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
 
-      <input
-        type="text"
-        placeholder="Enter Name"
-        onChange={(e) => setName(e.target.value)}
-      />
-      <br /><br />
-
-      <input
-        type="email"
-        placeholder="Enter Email"
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <br /><br />
-
-      <input
-        type="password"
-        placeholder="Enter Password"
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+      <input name="name" placeholder="Name" onChange={handleChange} /><br /><br />
+      <input name="email" placeholder="Email" onChange={handleChange} /><br /><br />
+      <input name="phone" placeholder="Phone" onChange={handleChange} /><br /><br />
+      <input name="password" type="password" placeholder="Password" onChange={handleChange} /><br /><br />
 
       <button onClick={register}>Register</button>
-
     </div>
   );
 }

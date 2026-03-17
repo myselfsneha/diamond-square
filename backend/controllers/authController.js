@@ -1,25 +1,27 @@
-const User = require("../models/User");   // ✅ FIXED (capital U)
+const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// ================= REGISTER =================
+// REGISTER
 exports.register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, phone, password } = req.body;
 
-    // check if user already exists
+    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    // create user
+    // Create user
     const user = new User({
       name,
       email,
+      phone,
       password: hashedPassword,
     });
 
@@ -29,17 +31,16 @@ exports.register = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
-
-// ================= LOGIN =================
+// LOGIN
 exports.loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;   // ✅ FIXED (email instead of phone)
+    const { phone, password } = req.body;
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -53,18 +54,17 @@ exports.loginUser = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || "secretkey",
       { expiresIn: "7d" }
     );
 
     res.json({
       message: "Login successful",
       token,
-      user
+      user,
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
