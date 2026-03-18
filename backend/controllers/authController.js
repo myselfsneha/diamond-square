@@ -5,19 +5,25 @@ const jwt = require("jsonwebtoken");
 // REGISTER
 exports.register = async (req, res) => {
   try {
+    console.log("REQ BODY:", req.body); // 🔥 DEBUG
+
     const { name, email, phone, password } = req.body;
 
+    // VALIDATION
     if (!name || !email || !phone || !password) {
-      return res.status(400).json({ message: "All fields required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
+    // CHECK EXISTING USER
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
+    // HASH PASSWORD
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // CREATE USER
     const user = new User({
       name,
       email,
@@ -30,7 +36,7 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: "User registered successfully" });
 
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
+    console.error("REGISTER ERROR:", error); // 🔥 VERY IMPORTANT
     res.status(500).json({ message: error.message });
   }
 };
