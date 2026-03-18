@@ -209,7 +209,7 @@ const createMaintenance = async () => {
       {
         amount: 2000,
         month: "March",
-        userId: "PUT_USER_ID_HERE",
+        userId: "69b6c060fc57c1994b09ad11", // ✅ REAL ID
       },
       {
         headers: {
