@@ -73,6 +73,26 @@ function App() {
     }
   };
 
+const adminDashboard = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      "https://diamond-square-api.onrender.com/api/admin/dashboard",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Access denied");
+  }
+};
+<button onClick={adminDashboard}>Admin Dashboard</button>
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>

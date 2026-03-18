@@ -8,8 +8,6 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
-      unique: true,
     },
     phone: {
       type: String,
@@ -20,9 +18,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    flatNumber: {
+      type: String,
+    },
     role: {
       type: String,
-      default: "user",
+      enum: ["resident", "admin"],
+      default: "resident",
     },
   },
   { timestamps: true }
