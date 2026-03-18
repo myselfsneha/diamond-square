@@ -13,7 +13,7 @@ function App() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // REGISTER
+  // ================= REGISTER =================
   const register = async () => {
     try {
       const res = await axios.post(
@@ -27,7 +27,7 @@ function App() {
     }
   };
 
-  // LOGIN
+  // ================= LOGIN =================
   const login = async () => {
     try {
       const res = await axios.post(
@@ -48,12 +48,10 @@ function App() {
     }
   };
 
-  // GET PROFILE
+  // ================= GET PROFILE =================
   const getProfile = async () => {
     try {
       const token = localStorage.getItem("token");
-
-      console.log("TOKEN:", token);
 
       const res = await axios.get(
         "https://diamond-square-api.onrender.com/api/auth/me",
@@ -68,31 +66,31 @@ function App() {
       alert("Profile fetched successfully");
 
     } catch (err) {
-      console.error(err);
       alert(err.response?.data?.message || "Error fetching profile");
     }
   };
 
-const adminDashboard = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  // ================= ADMIN =================
+  const adminDashboard = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await axios.get(
-      "https://diamond-square-api.onrender.com/api/admin/dashboard",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      const res = await axios.get(
+        "https://diamond-square-api.onrender.com/api/admin/dashboard",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    alert(res.data.message);
+      alert(res.data.message);
 
-  } catch (err) {
-    alert(err.response?.data?.message || "Access denied");
-  }
-};
-<button onClick={adminDashboard}>Admin Dashboard</button>
+    } catch (err) {
+      alert(err.response?.data?.message || "Access denied");
+    }
+  };
+
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
@@ -104,9 +102,15 @@ const adminDashboard = async () => {
 
       <button onClick={register}>Register</button>
       <br /><br />
+
       <button onClick={login}>Login</button>
       <br /><br />
+
       <button onClick={getProfile}>Get Profile</button>
+      <br /><br />
+
+      {/* ✅ FIXED POSITION */}
+      <button onClick={adminDashboard}>Admin Dashboard</button>
     </div>
   );
 }
