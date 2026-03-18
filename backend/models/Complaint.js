@@ -1,18 +1,9 @@
 const mongoose = require("mongoose");
 
-const complaintSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    message: String,
-    status: {
-      type: String,
-      default: "pending",
-    },
-  },
-  { timestamps: true }
-);
+const schema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  message: String,
+  status: { type: String, default: "pending" }
+});
 
-module.exports = mongoose.model("Complaint", complaintSchema);
+module.exports = mongoose.model("Complaint", schema);

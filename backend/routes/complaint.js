@@ -1,24 +1,19 @@
-const express = require("express");
-const router = express.Router();
-
+const router = require("express").Router();
 const Complaint = require("../models/Complaint");
 const { verifyToken } = require("../middleware/auth");
 
-// CREATE
 router.post("/", verifyToken, async (req, res) => {
-  const complaint = new Complaint({
+  const complaint = await Complaint.create({
     user: req.user.id,
-    message: req.body.message,
+    message: req.body.message
   });
 
-  await complaint.save();
-  res.json({ message: "Complaint submitted" });
+  res.json({ message: "Complaint added" });
 });
 
-// GET ALL (ADMIN)
 router.get("/", verifyToken, async (req, res) => {
-  const complaints = await Complaint.find().populate("user");
-  res.json(complaints);
+  const data = await Complaint.find().populate("user");
+  res.json(data);
 });
 
 module.exports = router;
