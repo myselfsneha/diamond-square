@@ -13,6 +13,7 @@ function App() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ================= REGISTER =================
   const register = async () => {
     try {
       const res = await axios.post(
@@ -22,8 +23,31 @@ function App() {
 
       alert(res.data.message);
     } catch (err) {
-      console.error(err);
-      alert("Registration Failed");
+      alert(err.response?.data?.message || "Registration Failed");
+    }
+  };
+
+  // ================= LOGIN =================
+  const login = async () => {
+    try {
+      const res = await axios.post(
+        "https://diamond-square-api.onrender.com/api/auth/login",
+        {
+          phone: form.phone,
+          password: form.password,
+        }
+      );
+
+      alert(res.data.message);
+
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", res.data.token);
+
+      console.log("TOKEN:", res.data.token);
+      console.log("USER:", res.data.user);
+
+    } catch (err) {
+      alert(err.response?.data?.message || "Login Failed");
     }
   };
 
@@ -37,6 +61,8 @@ function App() {
       <input name="password" type="password" placeholder="Password" onChange={handleChange} /><br /><br />
 
       <button onClick={register}>Register</button>
+      <br /><br />
+      <button onClick={login}>Login</button>
     </div>
   );
 }
