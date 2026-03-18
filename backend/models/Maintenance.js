@@ -2,23 +2,23 @@ const mongoose = require("mongoose");
 
 const maintenanceSchema = new mongoose.Schema(
   {
-    flatNumber: {
-      type: String,
-      required: true
-    },
     amount: {
       type: Number,
-      required: true
+      required: true,
     },
-    dueDate: {
-      type: Date,
-      required: true
+    month: {
+      type: String,
+      required: true,
     },
     status: {
       type: String,
-      enum: ["pending", "paid"],
-      default: "pending"
-    }
+      enum: ["unpaid", "paid"],
+      default: "unpaid",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );

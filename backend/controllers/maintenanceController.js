@@ -1,57 +1,66 @@
 const Maintenance = require("../models/Maintenance");
 
-// Add maintenance record
-exports.addMaintenance = async (req, res) => {
+// ================= CREATE BILL (ADMIN) =================
+exports.createMaintenance = async (req, res) => {
   try {
-    const { flatNumber, amount, dueDate } = req.body;
+    const { amount, month, userId } = req.body;
 
     const maintenance = new Maintenance({
-      flatNumber,
       amount,
-      dueDate
+      month,
+      user: userId,
     });
 
     await maintenance.save();
 
     res.status(201).json({
-      message: "Maintenance added",
-      maintenance
+      message: "Maintenance created",
+      maintenance,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-// Get all maintenance records
-exports.getMaintenance = async (req, res) => {
+// ================= GET MY BILLS =================
+exports.getMyMaintenance = async (req, res) => {
   try {
-    const records = await Maintenance.find().sort({ createdAt: -1 });
+    const bills = await Maintenance.find({ user: req.user.id });
 
-    res.json(records);
+    res.json(bills);
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
-// Mark as paid
+// ================= MARK AS PAID =================
 exports.markPaid = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const record = await Maintenance.findByIdAndUpdate(
-      id,
-      { status: "paid" },
-      { new: true }
-    );
+    const bill = await Maintenance.findById(id);
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    bill.status = "paid";
+    await bill.save();
 
     res.json({
-      message: "Payment updated",
-      record
+      message: "Payment successful",
+      bill,
     });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

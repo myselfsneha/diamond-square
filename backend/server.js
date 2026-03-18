@@ -9,6 +9,7 @@ const app = express();
 const adminRoutes = require("./routes/adminRoutes");
 const noticeRoutes = require("./routes/noticeRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
+const maintenanceRoutes = require("./routes/maintenanceRoutes");
 
 // CONNECT DB
 connectDB();
@@ -24,6 +25,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
