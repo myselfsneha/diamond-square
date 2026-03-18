@@ -9,6 +9,11 @@ function App() {
     password: "",
   });
 
+  const [notices, setNotices] = useState([]);
+  const [bills, setBills] = useState([]);
+
+  const API = "https://diamond-square-api.onrender.com";
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -16,11 +21,7 @@ function App() {
   // ================= REGISTER =================
   const register = async () => {
     try {
-      const res = await axios.post(
-        "https://diamond-square-api.onrender.com/api/auth/register",
-        form
-      );
-
+      const res = await axios.post(`${API}/api/auth/register`, form);
       alert(res.data.message);
     } catch (err) {
       alert(err.response?.data?.message || "Registration Failed");
@@ -30,280 +31,140 @@ function App() {
   // ================= LOGIN =================
   const login = async () => {
     try {
-      const res = await axios.post(
-        "https://diamond-square-api.onrender.com/api/auth/login",
-        {
-          phone: form.phone,
-          password: form.password,
-        }
-      );
+      const res = await axios.post(`${API}/api/auth/login`, {
+        phone: form.phone,
+        password: form.password,
+      });
 
-      alert(res.data.message);
-
-      // SAVE TOKEN
       localStorage.setItem("token", res.data.token);
+      alert("Login successful");
 
     } catch (err) {
       alert(err.response?.data?.message || "Login Failed");
     }
   };
 
-  // ================= GET PROFILE =================
-  const getProfile = async () => {
+  // ================= GET NOTICES =================
+  const getNotices = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(
-        "https://diamond-square-api.onrender.com/api/auth/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const res = await axios.get(`${API}/api/notices`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      console.log("PROFILE:", res.data);
-      alert("Profile fetched successfully");
+      setNotices(res.data);
 
     } catch (err) {
-      alert(err.response?.data?.message || "Error fetching profile");
+      alert("Error fetching notices");
     }
   };
 
-  // ================= ADMIN =================
-  const adminDashboard = async () => {
+  // ================= CREATE NOTICE =================
+  const createNotice = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await axios.get(
-        "https://diamond-square-api.onrender.com/api/admin/dashboard",
+      await axios.post(
+        `${API}/api/notices`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          title: "Meeting",
+          message: "Society meeting at 6 PM",
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      alert(res.data.message);
+      alert("Notice created");
 
     } catch (err) {
-      alert(err.response?.data?.message || "Access denied");
+      alert("Error creating notice");
     }
   };
 
-const createNotice = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  // ================= GET BILLS =================
+  const getBills = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await axios.post(
-      "https://diamond-square-api.onrender.com/api/notices",
-      {
-        title: "Water Supply Issue",
-        message: "Water will be off tomorrow from 10 AM",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      const res = await axios.get(`${API}/api/maintenance`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    alert(res.data.message);
+      setBills(res.data);
 
-  } catch (err) {
-    alert(err.response?.data?.message || "Error creating notice");
-  }
-};
+    } catch (err) {
+      alert("Error fetching bills");
+    }
+  };
 
-const getNotices = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  // ================= PAY BILL =================
+  const payBill = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await axios.get(
-      "https://diamond-square-api.onrender.com/api/notices",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      await axios.put(
+        `${API}/api/maintenance/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    console.log("NOTICES:", res.data);
+      alert("Payment successful");
+      getBills(); // refresh
 
-  } catch (err) {
-    alert(err.response?.data?.message || "Error fetching notices");
-  }
-};
+    } catch (err) {
+      alert("Payment failed");
+    }
+  };
 
-const createComplaint = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.post(
-      "https://diamond-square-api.onrender.com/api/complaints",
-      {
-        title: "Lift not working",
-        message: "Lift is stuck on 3rd floor",
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    alert(res.data.message);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Error creating complaint");
-  }
-};
-
-const getComplaints = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.get(
-      "https://diamond-square-api.onrender.com/api/complaints",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("COMPLAINTS:", res.data);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Error fetching complaints");
-  }
-};
-
-const resolveComplaint = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.put(
-      `https://diamond-square-api.onrender.com/api/complaints/${id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    alert(res.data.message);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Error updating complaint");
-  }
-};
-
-const createMaintenance = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.post(
-      "https://diamond-square-api.onrender.com/api/maintenance",
-      {
-        amount: 2000,
-        month: "March",
-        userId: "69b6c060fc57c1994b09ad11", // ✅ REAL ID
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    alert(res.data.message);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Error creating bill");
-  }
-};
-
-const getMyBills = async () => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.get(
-      "https://diamond-square-api.onrender.com/api/maintenance",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("BILLS:", res.data);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Error fetching bills");
-  }
-};
-
-const payBill = async (id) => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const res = await axios.put(
-      `https://diamond-square-api.onrender.com/api/maintenance/${id}`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    alert(res.data.message);
-
-  } catch (err) {
-    alert(err.response?.data?.message || "Payment failed");
-  }
-};
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Diamond Square Society</h1>
+    <div style={{ padding: "20px" }}>
+      <h1>🏢 Diamond Square Society</h1>
 
-      <input name="name" placeholder="Name" onChange={handleChange} /><br /><br />
-      <input name="email" placeholder="Email" onChange={handleChange} /><br /><br />
-      <input name="phone" placeholder="Phone" onChange={handleChange} /><br /><br />
-      <input name="password" type="password" placeholder="Password" onChange={handleChange} /><br /><br />
+      {/* AUTH */}
+      <input name="name" placeholder="Name" onChange={handleChange} /><br />
+      <input name="email" placeholder="Email" onChange={handleChange} /><br />
+      <input name="phone" placeholder="Phone" onChange={handleChange} /><br />
+      <input name="password" type="password" placeholder="Password" onChange={handleChange} /><br />
 
       <button onClick={register}>Register</button>
-      <br /><br />
-
       <button onClick={login}>Login</button>
-      <br /><br />
 
-      <button onClick={getProfile}>Get Profile</button>
-      <br /><br />
+      <hr />
 
-<br /><br />
-<button onClick={createNotice}>Create Notice (Admin)</button>
+      {/* NOTICES */}
+      <h2>📢 Notices</h2>
+      <button onClick={createNotice}>Create Notice</button>
+      <button onClick={getNotices}>Load Notices</button>
 
-<br /><br />
-<button onClick={getNotices}>Get Notices</button>
+      {notices.map((n, i) => (
+        <div key={i} style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}>
+          <h3>{n.title}</h3>
+          <p>{n.message}</p>
+        </div>
+      ))}
 
-<br /><br />
-<button onClick={createComplaint}>Create Complaint</button>
+      <hr />
 
-<br /><br />
-<button onClick={getComplaints}>Get Complaints (Admin)</button>
+      {/* MAINTENANCE */}
+      <h2>💳 Maintenance Bills</h2>
+      <button onClick={getBills}>Load Bills</button>
 
-<br /><br />
-<button onClick={createMaintenance}>Create Bill (Admin)</button>
+      {bills.map((b) => (
+        <div key={b._id} style={{ border: "1px solid black", margin: "10px", padding: "10px" }}>
+          <p>Month: {b.month}</p>
+          <p>Amount: ₹{b.amount}</p>
+          <p>Status: {b.status}</p>
 
-<br /><br />
-<button onClick={getMyBills}>Get My Bills</button>
-      {/* ✅ FIXED POSITION */}
-      <button onClick={adminDashboard}>Admin Dashboard</button>
+          {b.status === "unpaid" && (
+            <button onClick={() => payBill(b._id)}>Pay</button>
+          )}
+        </div>
+      ))}
     </div>
-
   );
 }
 
