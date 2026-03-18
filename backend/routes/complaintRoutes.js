@@ -3,12 +3,18 @@ const router = express.Router();
 
 const {
   createComplaint,
-  getComplaints,
+  getAllComplaints,
   updateStatus,
 } = require("../controllers/complaintController");
 
-router.post("/create", createComplaint);
-router.get("/", getComplaints);
-router.patch("/:id", updateStatus);
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+
+// USER
+router.post("/", authMiddleware, createComplaint);
+
+// ADMIN
+router.get("/", authMiddleware, adminMiddleware, getAllComplaints);
+router.put("/:id", authMiddleware, adminMiddleware, updateStatus);
 
 module.exports = router;
