@@ -10,7 +10,10 @@ const app = express();
 
 // MIDDLEWARE
 app.use(cors({
-  origin: ["http://localhost:3000", "https://your-frontend.vercel.app"],
+  origin: [
+    "http://localhost:3000",
+    "https://diamond-square-git-main-myselfsnehas-projects.vercel.app"
+  ],
   credentials: true,
 }));
 app.use(express.json());
