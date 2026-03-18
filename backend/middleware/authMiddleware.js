@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
+    // GET TOKEN FROM HEADER
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -10,6 +11,7 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
+    // FORMAT: Bearer TOKEN
     const token = authHeader.split(" ")[1];
 
     if (!token) {
@@ -18,8 +20,10 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
+    // VERIFY TOKEN
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+    // SAVE USER ID IN REQUEST
     req.user = decoded;
 
     next();

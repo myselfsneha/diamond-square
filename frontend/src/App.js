@@ -51,6 +51,29 @@ function App() {
     }
   };
 
+const getProfile = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      "https://diamond-square-api.onrender.com/api/auth/me",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log(res.data);
+    alert("Profile fetched successfully");
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error fetching profile");
+  }
+};
+
+<button onClick={getProfile}>Get Profile</button>
+
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
