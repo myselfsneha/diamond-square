@@ -5,18 +5,14 @@ const jwt = require("jsonwebtoken");
 // ================= REGISTER =================
 exports.register = async (req, res) => {
   try {
-    console.log("REQ BODY:", req.body);
-
     const { name, email, phone, password } = req.body;
 
-    // ✅ VALIDATION
     if (!name || !email || !phone || !password) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
 
-    // ✅ CHECK EXISTING USER (EMAIL OR PHONE)
     const existingUser = await User.findOne({
       $or: [{ email }, { phone }],
     });
@@ -27,10 +23,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    // ✅ HASH PASSWORD
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ CREATE USER
     const user = new User({
       name,
       email,
@@ -45,9 +39,6 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
-
-    // ✅ HANDLE DUPLICATE ERROR (IMPORTANT)
     if (error.code === 11000) {
       return res.status(400).json({
         message: "Email or phone already exists",
@@ -65,14 +56,12 @@ exports.loginUser = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    // ✅ VALIDATION
     if (!phone || !password) {
       return res.status(400).json({
-        message: "Phone and password are required",
+        message: "Phone and password required",
       });
     }
 
-    // ✅ FIND USER
     const user = await User.findOne({ phone });
 
     if (!user) {
@@ -81,7 +70,6 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // ✅ CHECK PASSWORD
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -90,14 +78,12 @@ exports.loginUser = async (req, res) => {
       });
     }
 
-    // ✅ GENERATE TOKEN
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // ✅ REMOVE PASSWORD FROM RESPONSE
     const { password: _, ...userData } = user._doc;
 
     res.json({
@@ -107,13 +93,12 @@ exports.loginUser = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
-
     res.status(500).json({
       message: error.message,
     });
   }
 };
+
 // ================= GET PROFILE =================
 exports.getProfile = async (req, res) => {
   try {
@@ -121,6 +106,8 @@ exports.getProfile = async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

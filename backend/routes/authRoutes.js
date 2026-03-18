@@ -9,11 +9,11 @@ const {
 
 const authMiddleware = require("../middleware/authMiddleware");
 
-// PUBLIC ROUTES
+// PUBLIC
 router.post("/register", register);
 router.post("/login", loginUser);
 
-// PROTECTED ROUTE
+// PROTECTED
 router.get("/me", authMiddleware, getProfile);
 
 module.exports = router;

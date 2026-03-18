@@ -2,16 +2,16 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    // GET TOKEN FROM HEADER
     const authHeader = req.headers.authorization;
 
+    // ❌ No header
     if (!authHeader) {
       return res.status(401).json({
         message: "No token, authorization denied",
       });
     }
 
-    // FORMAT: Bearer TOKEN
+    // ✅ Extract token
     const token = authHeader.split(" ")[1];
 
     if (!token) {
@@ -20,10 +20,10 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    // VERIFY TOKEN
+    // ✅ Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // SAVE USER ID IN REQUEST
+    // ✅ Attach user
     req.user = decoded;
 
     next();
