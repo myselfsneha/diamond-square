@@ -13,7 +13,7 @@ function App() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ================= REGISTER =================
+  // REGISTER
   const register = async () => {
     try {
       const res = await axios.post(
@@ -27,7 +27,7 @@ function App() {
     }
   };
 
-  // ================= LOGIN =================
+  // LOGIN
   const login = async () => {
     try {
       const res = await axios.post(
@@ -40,39 +40,38 @@ function App() {
 
       alert(res.data.message);
 
-      // ✅ SAVE TOKEN
+      // SAVE TOKEN
       localStorage.setItem("token", res.data.token);
-
-      console.log("TOKEN:", res.data.token);
-      console.log("USER:", res.data.user);
 
     } catch (err) {
       alert(err.response?.data?.message || "Login Failed");
     }
   };
 
-const getProfile = async () => {
-  try {
-    const token = localStorage.getItem("token");
+  // GET PROFILE
+  const getProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await axios.get(
-      "https://diamond-square-api.onrender.com/api/auth/me",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+      console.log("TOKEN:", token);
 
-    console.log(res.data);
-    alert("Profile fetched successfully");
+      const res = await axios.get(
+        "https://diamond-square-api.onrender.com/api/auth/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  } catch (err) {
-    alert(err.response?.data?.message || "Error fetching profile");
-  }
-};
+      console.log("PROFILE:", res.data);
+      alert("Profile fetched successfully");
 
-<button onClick={getProfile}>Get Profile</button>
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Error fetching profile");
+    }
+  };
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
@@ -86,6 +85,8 @@ const getProfile = async () => {
       <button onClick={register}>Register</button>
       <br /><br />
       <button onClick={login}>Login</button>
+      <br /><br />
+      <button onClick={getProfile}>Get Profile</button>
     </div>
   );
 }
