@@ -91,6 +91,49 @@ function App() {
     }
   };
 
+const createNotice = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.post(
+      "https://diamond-square-api.onrender.com/api/notices",
+      {
+        title: "Water Supply Issue",
+        message: "Water will be off tomorrow from 10 AM",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error creating notice");
+  }
+};
+
+const getNotices = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      "https://diamond-square-api.onrender.com/api/notices",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("NOTICES:", res.data);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error fetching notices");
+  }
+};
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
@@ -109,9 +152,15 @@ function App() {
       <button onClick={getProfile}>Get Profile</button>
       <br /><br />
 
+<br /><br />
+<button onClick={createNotice}>Create Notice (Admin)</button>
+
+<br /><br />
+<button onClick={getNotices}>Get Notices</button>
       {/* ✅ FIXED POSITION */}
       <button onClick={adminDashboard}>Admin Dashboard</button>
     </div>
+
   );
 }
 
