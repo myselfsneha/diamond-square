@@ -1,40 +1,36 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
-const connectDB = require("./config/db");
-
-const authRoutes = require("./routes/authRoutes");
+const errorHandler = require("./middleware/errorHandler");
+const helmet = require("helmet");
+const morgan = require("morgan");
 
 const app = express();
-const adminRoutes = require("./routes/adminRoutes");
-const noticeRoutes = require("./routes/noticeRoutes");
-const complaintRoutes = require("./routes/complaintRoutes");
-const maintenanceRoutes = require("./routes/maintenanceRoutes");
 
-// CONNECT DB
-connectDB();
-
-// ✅ SIMPLE CORS (ENOUGH)
-app.use(cors());
-
-// BODY PARSER
+// MIDDLEWARE
+app.use(cors({
+  origin: ["http://localhost:3000", "https://your-frontend.vercel.app"],
+  credentials: true,
+}));
 app.use(express.json());
 
 // ROUTES
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/notices", noticeRoutes);
-app.use("/api/complaints", complaintRoutes);
-app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/admin", require("./routes/admin"));
+app.use("/api/complaints", require("./routes/complaint"));
+app.use("/api/notices", require("./routes/notice"));
+app.use("/api/maintenance", require("./routes/maintenance"));
+app.use(errorHandler);
+app.use(helmet());
+app.use(morgan("dev"));
 
-// TEST ROUTE
-app.get("/", (req, res) => {
-  res.send("Diamond Square Backend Running 🚀");
-});
+// DB CONNECT
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.log(err));
 
-// PORT
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// SERVER
+app.listen(process.env.PORT, () => {
+  console.log("Server running");
 });
