@@ -134,6 +134,71 @@ const getNotices = async () => {
     alert(err.response?.data?.message || "Error fetching notices");
   }
 };
+
+const createComplaint = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.post(
+      "https://diamond-square-api.onrender.com/api/complaints",
+      {
+        title: "Lift not working",
+        message: "Lift is stuck on 3rd floor",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error creating complaint");
+  }
+};
+
+const getComplaints = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      "https://diamond-square-api.onrender.com/api/complaints",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("COMPLAINTS:", res.data);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error fetching complaints");
+  }
+};
+
+const resolveComplaint = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.put(
+      `https://diamond-square-api.onrender.com/api/complaints/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error updating complaint");
+  }
+};
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
@@ -157,6 +222,12 @@ const getNotices = async () => {
 
 <br /><br />
 <button onClick={getNotices}>Get Notices</button>
+
+<br /><br />
+<button onClick={createComplaint}>Create Complaint</button>
+
+<br /><br />
+<button onClick={getComplaints}>Get Complaints (Admin)</button>
       {/* ✅ FIXED POSITION */}
       <button onClick={adminDashboard}>Admin Dashboard</button>
     </div>

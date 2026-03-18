@@ -6,18 +6,18 @@ const complaintSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    description: {
-      type: String,
-      required: true,
-    },
-    flatNumber: {
+    message: {
       type: String,
       required: true,
     },
     status: {
       type: String,
-      enum: ["pending", "in-progress", "resolved"],
+      enum: ["pending", "resolved"],
       default: "pending",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }
