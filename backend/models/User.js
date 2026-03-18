@@ -1,33 +1,31 @@
-const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
-const authMiddleware = (req, res, next) => {
-  try {
-    const authHeader = req.headers.authorization;
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      default: "user",
+    },
+  },
+  { timestamps: true }
+);
 
-    if (!authHeader) {
-      return res.status(401).json({
-        message: "No token, authorization denied",
-      });
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-      return res.status(401).json({
-        message: "Invalid token format",
-      });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = decoded;
-
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      message: "Token is not valid",
-    });
-  }
-};
-
-module.exports = authMiddleware;
+module.exports = mongoose.model("User", userSchema);
