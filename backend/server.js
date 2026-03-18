@@ -15,13 +15,11 @@ const app = express();
 // CONNECT DATABASE
 connectDB();
 
-// ✅ VERY IMPORTANT CORS FIX
+// ✅ FINAL CORS FIX
 app.use(cors({
   origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
-
-// ✅ HANDLE PREFLIGHT (THIS FIXES YOUR EXACT ERROR)
-app.options("*", cors());
 
 // BODY PARSER
 app.use(express.json());
@@ -39,7 +37,7 @@ app.get("/", (req, res) => {
   res.send("Diamond Square Backend Running 🚀");
 });
 
-// ✅ RENDER PORT FIX
+// PORT
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
