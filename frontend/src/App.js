@@ -199,6 +199,72 @@ const resolveComplaint = async (id) => {
     alert(err.response?.data?.message || "Error updating complaint");
   }
 };
+
+const createMaintenance = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.post(
+      "https://diamond-square-api.onrender.com/api/maintenance",
+      {
+        amount: 2000,
+        month: "March",
+        userId: "PUT_USER_ID_HERE",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error creating bill");
+  }
+};
+
+const getMyBills = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(
+      "https://diamond-square-api.onrender.com/api/maintenance",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("BILLS:", res.data);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Error fetching bills");
+  }
+};
+
+const payBill = async (id) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await axios.put(
+      `https://diamond-square-api.onrender.com/api/maintenance/${id}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    alert(res.data.message);
+
+  } catch (err) {
+    alert(err.response?.data?.message || "Payment failed");
+  }
+};
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
       <h1>Diamond Square Society</h1>
@@ -228,6 +294,12 @@ const resolveComplaint = async (id) => {
 
 <br /><br />
 <button onClick={getComplaints}>Get Complaints (Admin)</button>
+
+<br /><br />
+<button onClick={createMaintenance}>Create Bill (Admin)</button>
+
+<br /><br />
+<button onClick={getMyBills}>Get My Bills</button>
       {/* ✅ FIXED POSITION */}
       <button onClick={adminDashboard}>Admin Dashboard</button>
     </div>
