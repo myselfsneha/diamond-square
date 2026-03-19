@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Layout from "../components/Layout";
 
@@ -8,16 +8,16 @@ function AdminComplaints() {
   const [data, setData] = useState([]);
   const token = localStorage.getItem("token");
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = useCallback(async () => {
     const res = await axios.get(`${API}/api/complaints`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     setData(res.data);
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchComplaints();
-  }, []);
+  }, [fetchComplaints]);
 
   const updateStatus = async (id, status) => {
     await axios.put(
@@ -28,7 +28,7 @@ function AdminComplaints() {
       }
     );
 
-    fetchComplaints(); // refresh
+    fetchComplaints();
   };
 
   return (
@@ -40,8 +40,8 @@ function AdminComplaints() {
           <p className="font-semibold">{c.user?.name}</p>
           <p>{c.message}</p>
 
-          <div className="flex justify-between items-center mt-2">
-            <span className="text-sm text-gray-500">{c.status}</span>
+          <div className="flex justify-between mt-2">
+            <span>{c.status}</span>
 
             <div className="flex gap-2">
               <button
