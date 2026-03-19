@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 
 const API = process.env.REACT_APP_API;
@@ -8,21 +8,21 @@ function AdminDashboard() {
 
   const token = localStorage.getItem("token");
 
-  const getUsers = async () => {
-    const res = await axios.get(`${API}/api/admin/users`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  const getUsers = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    setUsers(res.data);
-  };
+      setUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [token]);
 
   useEffect(() => {
-  const fetchData = async () => {
-    await getUsers();
-  };
-
-  fetchData();
-}, []);
+    getUsers();
+  }, [getUsers]);
 
   return (
     <div>
