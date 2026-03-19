@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
-const paymentSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+const schema = new mongoose.Schema({
+  user: mongoose.Schema.Types.ObjectId,
   amount: Number,
   status: String
-}, { timestamps: true });
+});
 
-module.exports = mongoose.model("Payment", paymentSchema);
+module.exports = mongoose.model("Payment", schema);

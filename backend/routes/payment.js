@@ -1,19 +1,18 @@
 const router = require("express").Router();
 const Razorpay = require("razorpay");
-const Payment = require("../models/Payment");
 const { verifyToken } = require("../middleware/auth");
+const Payment = require("../models/Payment");
 
-const razorpay = new Razorpay({
+const rzp = new Razorpay({
   key_id: process.env.RAZORPAY_KEY,
-  key_secret: process.env.RAZORPAY_SECRET,
+  key_secret: process.env.RAZORPAY_SECRET
 });
 
 router.post("/create-order", verifyToken, async (req, res) => {
-  const order = await razorpay.orders.create({
+  const order = await rzp.orders.create({
     amount: req.body.amount * 100,
     currency: "INR"
   });
-
   res.json(order);
 });
 
@@ -23,8 +22,7 @@ router.post("/", verifyToken, async (req, res) => {
     amount: req.body.amount,
     status: "paid"
   });
-
-  res.json({ message: "Payment saved" });
+  res.json({ msg: "Saved" });
 });
 
 module.exports = router;

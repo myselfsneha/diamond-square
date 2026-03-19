@@ -1,54 +1,22 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { Bar } from "react-chartjs-2";
-import Layout from "../components/Layout";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Complaint from "./pages/Complaint";
+import My from "./pages/MyComplaints";
+import Admin from "./pages/AdminComplaints";
+import Payment from "./pages/Payment";
+import Analytics from "./pages/Analytics";
 
-const API = process.env.REACT_APP_API;
-
-function Analytics() {
-  const [data, setData] = useState({
-    labels: [],
-    datasets: []
-  });
-
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    const fetch = async () => {
-      const res = await axios.get(`${API}/api/complaints`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const complaints = res.data;
-
-      const pending = complaints.filter(c => c.status === "pending").length;
-      const approved = complaints.filter(c => c.status === "approved").length;
-      const rejected = complaints.filter(c => c.status === "rejected").length;
-
-      setData({
-        labels: ["Pending", "Approved", "Rejected"],
-        datasets: [{
-          label: "Complaints",
-          data: [pending, approved, rejected],
-          backgroundColor: ["yellow", "green", "red"]
-        }]
-      });
-    };
-
-    fetch();
-  }, []);
-
+function App() {
   return (
-    <Layout>
-      <h1>Analytics</h1>
-
-      {data.datasets.length > 0 ? (
-        <Bar data={data} />
-      ) : (
-        <p>Loading...</p>
-      )}
-    </Layout>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Complaint />} />
+        <Route path="/my" element={<My />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/pay" element={<Payment />} />
+        <Route path="/analytics" element={<Analytics />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
-export default Analytics;
+export default App;

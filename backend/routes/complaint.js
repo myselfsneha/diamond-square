@@ -7,26 +7,20 @@ router.post("/", verifyToken, async (req, res) => {
     user: req.user.id,
     message: req.body.message
   });
-
-  res.json({ message: "Complaint submitted" });
+  res.json({ msg: "Created" });
 });
 
 router.get("/", verifyToken, isAdmin, async (req, res) => {
-  const data = await Complaint.find().populate("user");
-  res.json(data);
+  res.json(await Complaint.find().populate("user"));
 });
 
 router.get("/my", verifyToken, async (req, res) => {
-  const data = await Complaint.find({ user: req.user.id });
-  res.json(data);
+  res.json(await Complaint.find({ user: req.user.id }));
 });
 
 router.put("/:id", verifyToken, isAdmin, async (req, res) => {
-  await Complaint.findByIdAndUpdate(req.params.id, {
-    status: req.body.status
-  });
-
-  res.json({ message: "Updated" });
+  await Complaint.findByIdAndUpdate(req.params.id, req.body);
+  res.json({ msg: "Updated" });
 });
 
 module.exports = router;

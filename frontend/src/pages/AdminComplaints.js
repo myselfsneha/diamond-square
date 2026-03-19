@@ -1,46 +1,38 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Layout from "../components/Layout";
+import { Bar } from "react-chartjs-2";
 
 const API = process.env.REACT_APP_API;
 
-function AdminComplaints() {
-  const [data, setData] = useState([]);
+function Analytics() {
+  const [data, setData] = useState({ labels: [], datasets: [] });
   const token = localStorage.getItem("token");
 
-  const fetchComplaints = async () => {
-    const res = await axios.get(`${API}/api/complaints`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setData(res.data);
-  };
-
-  const update = async (id, status) => {
-    await axios.put(`${API}/api/complaints/${id}`, 
-      { status },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchComplaints();
-  };
-
   useEffect(() => {
-    if (token) fetchComplaints();
+    const run = async () => {
+      const res = await axios.get(`${API}/api/complaints`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const c = res.data;
+
+      setData({
+        labels: ["Pending", "Approved"],
+        datasets: [{
+          label: "Complaints",
+          data: [
+            c.filter(x => x.status === "pending").length,
+            c.filter(x => x.status === "approved").length
+          ],
+          backgroundColor: ["orange", "green"]
+        }]
+      });
+    };
+
+    if (token) run();
   }, [token]);
 
-  return (
-    <Layout>
-      <h1>Admin Complaints</h1>
-
-      {data.map(c => (
-        <div key={c._id}>
-          {c.message} - {c.status}
-
-          <button onClick={() => update(c._id, "approved")}>Approve</button>
-          <button onClick={() => update(c._id, "rejected")}>Reject</button>
-        </div>
-      ))}
-    </Layout>
-  );
+  return data.datasets.length ? <Bar data={data} /> : "Loading...";
 }
 
-export default AdminComplaints;
+export default Analytics;
