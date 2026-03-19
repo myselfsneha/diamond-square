@@ -33,7 +33,7 @@ router.post("/login", async (req, res) => {
     process.env.JWT_SECRET
   );
 
-  res.json({ token, user });
+  res.json({ message: "Login successful", token, user });
 });
 
 // PROFILE

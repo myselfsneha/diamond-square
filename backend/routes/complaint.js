@@ -13,18 +13,18 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 // GET ALL
-router.get("/", verifyToken, async (req, res) => {
+router.get("/", verifyToken, isAdmin, async (req, res) => {
   const data = await Complaint.find().populate("user");
   res.json(data);
 });
 
-// MY COMPLAINTS
+// MY
 router.get("/my", verifyToken, async (req, res) => {
   const data = await Complaint.find({ user: req.user.id });
   res.json(data);
 });
 
-// UPDATE STATUS
+// UPDATE
 router.put("/:id", verifyToken, isAdmin, async (req, res) => {
   await Complaint.findByIdAndUpdate(req.params.id, {
     status: req.body.status
