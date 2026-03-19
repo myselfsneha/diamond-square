@@ -8,6 +8,7 @@ function Layout({ children }) {
         <Link to="/my-complaints">My</Link>
         <Link to="/admin/complaints">Admin</Link>
         <Link to="/payment">Payment</Link>
+        <Link to="/analytics">Analytics</Link>
       </nav>
 
       <div className="p-6">{children}</div>
