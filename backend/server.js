@@ -10,5 +10,6 @@ mongoose.connect(process.env.MONGO_URL)
 
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/complaints", require("./routes/complaint"));
+app.use("/api/payments", require("./routes/payment"));
 
 app.listen(5000, () => console.log("Server running"));

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Complaint from "./pages/Complaint";
 import MyComplaints from "./pages/MyComplaints";
 import AdminComplaints from "./pages/AdminComplaints";
+import Payment from "./pages/Payment";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
         <Route path="/complaint" element={<Complaint />} />
         <Route path="/my-complaints" element={<MyComplaints />} />
         <Route path="/admin/complaints" element={<AdminComplaints />} />
+        <Route path="/payment" element={<Payment />} />
       </Routes>
     </BrowserRouter>
   );
