@@ -9,13 +9,20 @@ function MyComplaints() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    axios.get(`${API}/api/complaints/my`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(res => setData(res.data));
+    const fetch = async () => {
+      const res = await axios.get(`${API}/api/complaints/my`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setData(res.data);
+    };
+
+    if (token) fetch();
   }, [token]);
 
   return (
     <Layout>
+      <h1>My Complaints</h1>
+
       {data.map(c => (
         <div key={c._id}>
           {c.message} - {c.status}
