@@ -17,8 +17,12 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    getUsers();
-  }, []);
+  const fetchData = async () => {
+    await getUsers();
+  };
+
+  fetchData();
+}, []);
 
   return (
     <div>
