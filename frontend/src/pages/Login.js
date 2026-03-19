@@ -19,10 +19,34 @@ function Login() {
   };
 
   return (
-    <div className="p-10 text-center">
-      <input placeholder="Phone" onChange={e => setForm({...form, phone:e.target.value})}/>
-      <input type="password" placeholder="Password" onChange={e => setForm({...form, password:e.target.value})}/>
-      <button onClick={login}>Login</button>
+    <div className="h-screen flex items-center justify-center bg-gray-100">
+
+      <div className="bg-white p-8 rounded-xl shadow w-80">
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          Login
+        </h2>
+
+        <input
+          className="w-full border p-2 mb-4 rounded"
+          placeholder="Phone"
+          onChange={e => setForm({ ...form, phone: e.target.value })}
+        />
+
+        <input
+          type="password"
+          className="w-full border p-2 mb-4 rounded"
+          placeholder="Password"
+          onChange={e => setForm({ ...form, password: e.target.value })}
+        />
+
+        <button
+          onClick={login}
+          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+        >
+          Login
+        </button>
+      </div>
+
     </div>
   );
 }

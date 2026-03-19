@@ -1,30 +1,29 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
-const API = process.env.REACT_APP_API;
+import Layout from "../components/Layout";
 
 function Dashboard() {
-  const [notices, setNotices] = useState([]);
-
-  useEffect(() => {
-    const fetch = async () => {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(`${API}/api/notices`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setNotices(res.data);
-    };
-
-    fetch();
-  }, []);
-
   return (
-    <div>
-      <h1>User Dashboard</h1>
-      {notices.map(n => <p key={n._id}>{n.title}</p>)}
-    </div>
+    <Layout>
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+      <div className="grid grid-cols-3 gap-6">
+        
+        <div className="bg-white p-5 rounded-xl shadow">
+          <h2 className="text-lg font-semibold">Complaints</h2>
+          <p className="text-2xl mt-2">5</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl shadow">
+          <h2 className="text-lg font-semibold">Notices</h2>
+          <p className="text-2xl mt-2">3</p>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl shadow">
+          <h2 className="text-lg font-semibold">Maintenance</h2>
+          <p className="text-2xl mt-2">₹2000</p>
+        </div>
+
+      </div>
+    </Layout>
   );
 }
 
