@@ -7,38 +7,21 @@ const API = process.env.REACT_APP_API;
 function Complaint() {
   const [message, setMessage] = useState("");
 
-  const submitComplaint = async () => {
+  const submit = async () => {
     const token = localStorage.getItem("token");
 
-    await axios.post(
-      `${API}/api/complaints`,
+    await axios.post(`${API}/api/complaints`,
       { message },
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    alert("Complaint submitted");
-    setMessage("");
+    alert("Submitted");
   };
 
   return (
     <Layout>
-      <h1 className="text-2xl font-bold mb-4">Raise Complaint</h1>
-
-      <textarea
-        className="w-full border p-3 rounded mb-4"
-        placeholder="Enter your issue..."
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-      />
-
-      <button
-        onClick={submitComplaint}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Submit
-      </button>
+      <textarea onChange={(e) => setMessage(e.target.value)} />
+      <button onClick={submit}>Submit</button>
     </Layout>
   );
 }

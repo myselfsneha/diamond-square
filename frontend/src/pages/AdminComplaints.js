@@ -8,7 +8,7 @@ function AdminComplaints() {
   const [data, setData] = useState([]);
   const token = localStorage.getItem("token");
 
-  const fetchComplaints = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     const res = await axios.get(`${API}/api/complaints`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -16,49 +16,25 @@ function AdminComplaints() {
   }, [token]);
 
   useEffect(() => {
-    fetchComplaints();
-  }, [fetchComplaints]);
+    fetchData();
+  }, [fetchData]);
 
-  const updateStatus = async (id, status) => {
-    await axios.put(
-      `${API}/api/complaints/${id}`,
+  const update = async (id, status) => {
+    await axios.put(`${API}/api/complaints/${id}`,
       { status },
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    fetchComplaints();
+    fetchData();
   };
 
   return (
     <Layout>
-      <h1 className="text-2xl font-bold mb-4">All Complaints</h1>
-
       {data.map(c => (
-        <div key={c._id} className="bg-white p-4 rounded shadow mb-3">
-          <p className="font-semibold">{c.user?.name}</p>
-          <p>{c.message}</p>
-
-          <div className="flex justify-between mt-2">
-            <span>{c.status}</span>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => updateStatus(c._id, "approved")}
-                className="bg-green-500 text-white px-2 py-1 rounded"
-              >
-                Approve
-              </button>
-
-              <button
-                onClick={() => updateStatus(c._id, "rejected")}
-                className="bg-red-500 text-white px-2 py-1 rounded"
-              >
-                Reject
-              </button>
-            </div>
-          </div>
+        <div key={c._id}>
+          {c.message}
+          <button onClick={() => update(c._id, "approved")}>Approve</button>
+          <button onClick={() => update(c._id, "rejected")}>Reject</button>
         </div>
       ))}
     </Layout>

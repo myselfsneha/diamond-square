@@ -8,19 +8,14 @@ const { verifyToken } = require("../middleware/auth");
 router.post("/register", async (req, res) => {
   const { name, email, phone, password } = req.body;
 
-  const exists = await User.findOne({
-    $or: [{ email }, { phone }]
-  });
+  const exists = await User.findOne({ $or: [{ email }, { phone }] });
+  if (exists) return res.json({ message: "User already exists" });
 
-  if (exists) return res.status(400).json({ message: "User exists" });
+  const hash = await bcrypt.hash(password, 10);
 
-  const hashed = await bcrypt.hash(password, 10);
+  await User.create({ name, email, phone, password: hash });
 
-  const user = await User.create({
-    name, email, phone, password: hashed
-  });
-
-  res.json({ message: "Registered" });
+  res.json({ message: "User registered successfully" });
 });
 
 // LOGIN
@@ -28,17 +23,17 @@ router.post("/login", async (req, res) => {
   const { phone, password } = req.body;
 
   const user = await User.findOne({ phone });
-  if (!user) return res.status(400).json({ message: "User not found" });
+  if (!user) return res.json({ message: "User not found" });
 
   const match = await bcrypt.compare(password, user.password);
-  if (!match) return res.status(400).json({ message: "Wrong password" });
+  if (!match) return res.json({ message: "Wrong password" });
 
   const token = jwt.sign(
     { id: user._id, role: user.role },
     process.env.JWT_SECRET
   );
 
-  res.json({ message: "Login successful", token, user });
+  res.json({ token, user });
 });
 
 // PROFILE
