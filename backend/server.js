@@ -19,5 +19,5 @@ app.use("/api/complaints", require("./routes/complaint"));
 app.use("/api/payments", require("./routes/payment"));
 
 app.listen(process.env.PORT, () =>
-  console.log("Server running on port", process.env.PORT)
+  console.log("Server running")
 );

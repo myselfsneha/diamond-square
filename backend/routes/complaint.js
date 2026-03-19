@@ -2,7 +2,6 @@ const router = require("express").Router();
 const Complaint = require("../models/Complaint");
 const { verifyToken, isAdmin } = require("../middleware/auth");
 
-// CREATE
 router.post("/", verifyToken, async (req, res) => {
   await Complaint.create({
     user: req.user.id,
@@ -12,19 +11,16 @@ router.post("/", verifyToken, async (req, res) => {
   res.json({ message: "Complaint submitted" });
 });
 
-// GET ALL
 router.get("/", verifyToken, isAdmin, async (req, res) => {
   const data = await Complaint.find().populate("user");
   res.json(data);
 });
 
-// MY
 router.get("/my", verifyToken, async (req, res) => {
   const data = await Complaint.find({ user: req.user.id });
   res.json(data);
 });
 
-// UPDATE
 router.put("/:id", verifyToken, isAdmin, async (req, res) => {
   await Complaint.findByIdAndUpdate(req.params.id, {
     status: req.body.status

@@ -9,6 +9,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Complaint />} />
         <Route path="/complaint" element={<Complaint />} />
         <Route path="/my-complaints" element={<MyComplaints />} />
         <Route path="/admin/complaints" element={<AdminComplaints />} />

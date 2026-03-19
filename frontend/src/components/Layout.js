@@ -4,7 +4,7 @@ function Layout({ children }) {
   return (
     <div>
       <nav className="bg-black text-white p-4 flex gap-4">
-        <Link to="/complaint">Complaint</Link>
+        <Link to="/">Home</Link>
         <Link to="/my-complaints">My</Link>
         <Link to="/admin/complaints">Admin</Link>
         <Link to="/payment">Payment</Link>

@@ -6,7 +6,11 @@ import Layout from "../components/Layout";
 const API = process.env.REACT_APP_API;
 
 function Analytics() {
-  const [data, setData] = useState({});
+  const [data, setData] = useState({
+    labels: [],
+    datasets: []
+  });
+
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -32,13 +36,17 @@ function Analytics() {
     };
 
     fetch();
-  }, [token]);
+  }, []);
 
   return (
     <Layout>
-      <h1 className="text-2xl font-bold mb-6">Analytics</h1>
+      <h1>Analytics</h1>
 
-      <Bar data={data} />
+      {data.datasets.length > 0 ? (
+        <Bar data={data} />
+      ) : (
+        <p>Loading...</p>
+      )}
     </Layout>
   );
 }

@@ -5,13 +5,9 @@ exports.verifyToken = (req, res, next) => {
 
   if (!token) return res.status(401).json({ message: "No token" });
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-  }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = decoded;
+  next();
 };
 
 exports.isAdmin = (req, res, next) => {
