@@ -2,22 +2,17 @@ const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema(
   {
-    message: {
-      type: String,
-      required: true
-    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
+    flat: { type: mongoose.Schema.Types.ObjectId, ref: "Flat", index: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
     type: {
       type: String,
-      enum: ["notice", "complaint", "visitor", "birthday"],
-      required: true
+      enum: ["maintenance", "notice", "complaint", "birthday", "anniversary", "system"],
+      required: true,
+      index: true,
     },
-    flatNumber: {
-      type: String
-    },
-    read: {
-      type: Boolean,
-      default: false
-    }
+    read: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
