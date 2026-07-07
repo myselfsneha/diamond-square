@@ -12,8 +12,8 @@ exports.approveResident = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const [users] = await db.query(
-      "SELECT * FROM users WHERE id=?",
+    const { rows: users } = await db.query(
+      "SELECT * FROM users WHERE id = $1",
       [userId]
     );
 
@@ -25,20 +25,16 @@ exports.approveResident = async (req, res) => {
     }
 
     const otp = generateOTP();
-
-    const expiry = new Date(
-      Date.now() + 10 * 60 * 1000
-    );
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
     await db.query(
       `
       UPDATE users
-      SET
-        approval_status='approved',
-        approval_otp=?,
-        otp_expires_at=?,
-        otp_verified=0
-      WHERE id=?
+      SET approval_status='approved',
+          approval_otp=$1,
+          otp_expires_at=$2,
+          otp_verified=false
+      WHERE id=$3
       `,
       [otp, expiry, userId]
     );
@@ -46,9 +42,8 @@ exports.approveResident = async (req, res) => {
     return res.json({
       success: true,
       message: "Resident approved successfully.",
-      otp, // Remove this in production after SMS is integrated
+      otp,
     });
-
   } catch (error) {
     console.error(error);
 
@@ -64,8 +59,7 @@ exports.approveResident = async (req, res) => {
 // ===============================
 exports.getPendingUsers = async (req, res) => {
   try {
-    const [users] = await db.query(
-      `
+    const { rows: users } = await db.query(`
       SELECT
         id,
         name,
@@ -79,15 +73,14 @@ exports.getPendingUsers = async (req, res) => {
       FROM users
       WHERE approval_status = 'pending'
       ORDER BY created_at DESC
-      `
-    );
+    `);
 
-    res.json({
+    return res.json({
       success: true,
       users,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -99,8 +92,7 @@ exports.getPendingUsers = async (req, res) => {
 // ===============================
 exports.getAllUsers = async (req, res) => {
   try {
-    const [users] = await db.query(
-      `
+    const { rows: users } = await db.query(`
       SELECT
         id,
         name,
@@ -114,15 +106,14 @@ exports.getAllUsers = async (req, res) => {
         created_at
       FROM users
       ORDER BY created_at DESC
-      `
-    );
+    `);
 
-    res.json({
+    return res.json({
       success: true,
       users,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -140,17 +131,17 @@ exports.approveUser = async (req, res) => {
       `
       UPDATE users
       SET approval_status = 'approved'
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: "Resident approved successfully.",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -170,24 +161,23 @@ exports.rejectUser = async (req, res) => {
       UPDATE users
       SET
         approval_status = 'rejected',
-        rejection_reason = ?
-      WHERE id = ?
+        rejection_reason = $1
+      WHERE id = $2
       `,
       [reason || "Rejected by admin", id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: "Resident rejected successfully.",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
 // ===============================
 // Activate / Deactivate Resident
 // ===============================
@@ -195,8 +185,8 @@ exports.toggleUserStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [users] = await db.query(
-      "SELECT is_active FROM users WHERE id = ?",
+    const { rows: users } = await db.query(
+      "SELECT is_active FROM users WHERE id = $1",
       [id]
     );
 
@@ -207,31 +197,31 @@ exports.toggleUserStatus = async (req, res) => {
       });
     }
 
-    const newStatus = users[0].is_active ? 0 : 1;
+    const newStatus = !users[0].is_active;
 
     await db.query(
       `
       UPDATE users
-      SET is_active = ?
-      WHERE id = ?
+      SET is_active = $1
+      WHERE id = $2
       `,
       [newStatus, id]
     );
 
-    res.json({
+    return res.json({
       success: true,
-      message:
-        newStatus === 1
-          ? "Resident activated."
-          : "Resident deactivated.",
+      message: newStatus
+        ? "Resident activated."
+        : "Resident deactivated.",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 // ===============================
 // Toggle Admin Role
 // ===============================
@@ -239,7 +229,6 @@ exports.toggleAdminRole = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Prevent admin from changing their own role
     if (Number(req.user.id) === Number(id)) {
       return res.status(400).json({
         success: false,
@@ -247,8 +236,8 @@ exports.toggleAdminRole = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      "SELECT role FROM users WHERE id = ?",
+    const { rows: users } = await db.query(
+      "SELECT role FROM users WHERE id = $1",
       [id]
     );
 
@@ -267,13 +256,13 @@ exports.toggleAdminRole = async (req, res) => {
     await db.query(
       `
       UPDATE users
-      SET role = ?
-      WHERE id = ?
+      SET role = $1
+      WHERE id = $2
       `,
       [newRole, id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       message:
         newRole === "admin"
@@ -282,12 +271,13 @@ exports.toggleAdminRole = async (req, res) => {
       role: newRole,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
+
 // ===============================
 // Delete Resident
 // ===============================
@@ -295,7 +285,6 @@ exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Prevent deleting yourself
     if (Number(req.user.id) === Number(id)) {
       return res.status(400).json({
         success: false,
@@ -303,8 +292,8 @@ exports.deleteUser = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      "SELECT id FROM users WHERE id = ?",
+    const { rows: users } = await db.query(
+      "SELECT id FROM users WHERE id = $1",
       [id]
     );
 
@@ -316,32 +305,34 @@ exports.deleteUser = async (req, res) => {
     }
 
     await db.query(
-      "DELETE FROM users WHERE id = ?",
+      "DELETE FROM users WHERE id = $1",
       [id]
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: "Resident deleted successfully.",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
   }
 };
-
+// ===============================
+// Approve Resident (Keep ONLY this one)
+// Delete the duplicate approveResident above.
+// ===============================
 exports.approveResident = async (req, res) => {
   try {
     const { userId } = req.params;
 
     const otp = generateOTP();
-
     const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    const [users] = await db.query(
-      "SELECT * FROM users WHERE id=?",
+    const { rows: users } = await db.query(
+      "SELECT * FROM users WHERE id = $1",
       [userId]
     );
 
@@ -356,27 +347,21 @@ exports.approveResident = async (req, res) => {
       `
       UPDATE users
       SET
-        approval_status='approved',
-        approval_otp=?,
-        otp_expires_at=?,
-        otp_verified=0
-      WHERE id=?
+        approval_status = 'approved',
+        approval_otp = $1,
+        otp_expires_at = $2,
+        otp_verified = false
+      WHERE id = $3
       `,
       [otp, expiry, userId]
     );
 
-    // =============================
-    // SMS / Email Integration
-    // =============================
-    // Replace this console.log with Twilio/Fast2SMS later.
-    console.log(
-      `OTP for ${users[0].phone}: ${otp}`
-    );
+    console.log(`OTP for ${users[0].phone}: ${otp}`);
 
     return res.json({
       success: true,
       message: "Resident approved successfully. OTP generated.",
-      otp, // Remove this after SMS is integrated
+      otp,
     });
   } catch (error) {
     console.error(error);

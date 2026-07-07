@@ -1,6 +1,8 @@
 const db = require("../config/db");
 
+// ==============================
 // Create Complaint
+// ==============================
 exports.createComplaint = async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -11,10 +13,13 @@ exports.createComplaint = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
-      `INSERT INTO complaints
+    const { rows } = await db.query(
+      `
+      INSERT INTO complaints
       (user_id, title, description, status)
-      VALUES (?, ?, ?, ?)`,
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+      `,
       [
         req.user.id,
         title,
@@ -25,7 +30,7 @@ exports.createComplaint = async (req, res) => {
 
     res.status(201).json({
       message: "Complaint submitted successfully",
-      complaintId: result.insertId,
+      complaintId: rows[0].id,
     });
   } catch (error) {
     res.status(500).json({
@@ -34,18 +39,22 @@ exports.createComplaint = async (req, res) => {
   }
 };
 
+// ==============================
 // Get My Complaints
+// ==============================
 exports.getMyComplaints = async (req, res) => {
   try {
-    const [results] = await db.query(
-      `SELECT *
+    const { rows } = await db.query(
+      `
+      SELECT *
       FROM complaints
-      WHERE user_id = ?
-      ORDER BY created_at DESC`,
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      `,
       [req.user.id]
     );
 
-    res.json(results);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -53,13 +62,16 @@ exports.getMyComplaints = async (req, res) => {
   }
 };
 
+// ==============================
 // Get Single Complaint
+// ==============================
 exports.getComplaintById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [results] = await db.query(
-      `SELECT
+    const { rows } = await db.query(
+      `
+      SELECT
         c.*,
         u.name,
         u.phone,
@@ -67,17 +79,18 @@ exports.getComplaintById = async (req, res) => {
       FROM complaints c
       JOIN users u
         ON c.user_id = u.id
-      WHERE c.id = ?`,
+      WHERE c.id = $1
+      `,
       [id]
     );
 
-    if (results.length === 0) {
+    if (!rows.length) {
       return res.status(404).json({
         message: "Complaint not found",
       });
     }
 
-    res.json(results[0]);
+    res.json(rows[0]);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -85,11 +98,14 @@ exports.getComplaintById = async (req, res) => {
   }
 };
 
+// ==============================
 // Get All Complaints
+// ==============================
 exports.getAllComplaints = async (req, res) => {
   try {
-    const [results] = await db.query(
-      `SELECT
+    const { rows } = await db.query(
+      `
+      SELECT
         c.*,
         u.name,
         u.phone,
@@ -97,10 +113,11 @@ exports.getAllComplaints = async (req, res) => {
       FROM complaints c
       JOIN users u
         ON c.user_id = u.id
-      ORDER BY c.created_at DESC`
+      ORDER BY c.created_at DESC
+      `
     );
 
-    res.json(results);
+    res.json(rows);
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -108,7 +125,9 @@ exports.getAllComplaints = async (req, res) => {
   }
 };
 
+// ==============================
 // Update Complaint Status
+// ==============================
 exports.updateComplaintStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -126,14 +145,16 @@ exports.updateComplaintStatus = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
-      `UPDATE complaints
-      SET status = ?
-      WHERE id = ?`,
+    const result = await db.query(
+      `
+      UPDATE complaints
+      SET status = $1
+      WHERE id = $2
+      `,
       [status, id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         message: "Complaint not found",
       });
@@ -149,17 +170,22 @@ exports.updateComplaintStatus = async (req, res) => {
   }
 };
 
+// ==============================
 // Delete Complaint
+// ==============================
 exports.deleteComplaint = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
-      "DELETE FROM complaints WHERE id = ?",
+    const result = await db.query(
+      `
+      DELETE FROM complaints
+      WHERE id = $1
+      `,
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         message: "Complaint not found",
       });

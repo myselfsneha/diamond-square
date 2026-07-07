@@ -2,9 +2,12 @@ const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
 
+// ==============================
+// Get All Documents
+// ==============================
 exports.getDocuments = async (req, res) => {
   try {
-    const [documents] = await db.query(`
+    const { rows: documents } = await db.query(`
       SELECT
         d.*,
         u.name AS uploaded_by_name
@@ -28,6 +31,9 @@ exports.getDocuments = async (req, res) => {
   }
 };
 
+// ==============================
+// Upload Document
+// ==============================
 exports.uploadDocument = async (req, res) => {
   try {
     const { title, description, category } = req.body;
@@ -46,7 +52,7 @@ exports.uploadDocument = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       INSERT INTO documents
       (
@@ -57,7 +63,8 @@ exports.uploadDocument = async (req, res) => {
         file_path,
         uploaded_by
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
       `,
       [
         title.trim(),
@@ -72,7 +79,7 @@ exports.uploadDocument = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Document uploaded successfully.",
-      documentId: result.insertId,
+      documentId: result.rows[0].id,
     });
   } catch (error) {
     console.error("Upload Document Error:", error);
@@ -83,28 +90,30 @@ exports.uploadDocument = async (req, res) => {
     });
   }
 };
-
+// ==============================
+// Download Document
+// ==============================
 exports.downloadDocument = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [documents] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT *
       FROM documents
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!documents.length) {
+    if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Document not found.",
       });
     }
 
-    const document = documents[0];
+    const document = rows[0];
 
     const filePath = path.join(
       __dirname,
@@ -130,27 +139,30 @@ exports.downloadDocument = async (req, res) => {
   }
 };
 
+// ==============================
+// Delete Document
+// ==============================
 exports.deleteDocument = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [documents] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT *
       FROM documents
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!documents.length) {
+    if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Document not found.",
       });
     }
 
-    const document = documents[0];
+    const document = rows[0];
 
     const filePath = path.join(
       __dirname,
@@ -165,7 +177,7 @@ exports.deleteDocument = async (req, res) => {
     await db.query(
       `
       DELETE FROM documents
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );

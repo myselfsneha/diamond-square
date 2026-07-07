@@ -1,5 +1,8 @@
 const Contact = require("../models/contactModel");
 
+// ==============================
+// Get All Contacts
+// ==============================
 exports.getContacts = async (req, res) => {
   try {
     const contacts = await Contact.getAllContacts();
@@ -18,6 +21,9 @@ exports.getContacts = async (req, res) => {
   }
 };
 
+// ==============================
+// Get Single Contact
+// ==============================
 exports.getContact = async (req, res) => {
   try {
     const { id } = req.params;
@@ -45,6 +51,9 @@ exports.getContact = async (req, res) => {
   }
 };
 
+// ==============================
+// Create Contact
+// ==============================
 exports.createContact = async (req, res) => {
   try {
     const { name, designation, phone } = req.body;
@@ -73,6 +82,9 @@ exports.createContact = async (req, res) => {
   }
 };
 
+// ==============================
+// Update Contact
+// ==============================
 exports.updateContact = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,6 +114,9 @@ exports.updateContact = async (req, res) => {
   }
 };
 
+// ==============================
+// Delete Contact
+// ==============================
 exports.deleteContact = async (req, res) => {
   try {
     const { id } = req.params;

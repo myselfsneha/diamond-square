@@ -1,7 +1,7 @@
 const db = require("../config/db");
 
 exports.getAllNotifications = async () => {
-  const [rows] = await db.query(`
+  const result = await db.query(`
     SELECT
       n.*,
       u.name AS created_by_name
@@ -11,24 +11,24 @@ exports.getAllNotifications = async () => {
     ORDER BY n.created_at DESC
   `);
 
-  return rows;
+  return result.rows;
 };
 
 exports.getNotificationById = async (id) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM notifications
-    WHERE id = ?
+    WHERE id = $1
     `,
     [id]
   );
 
-  return rows[0] || null;
+  return result.rows[0] || null;
 };
 
 exports.createNotification = async (data) => {
-  const [result] = await db.query(
+  const result = await db.query(
     `
     INSERT INTO notifications
     (
@@ -39,7 +39,8 @@ exports.createNotification = async (data) => {
       resident_id,
       is_active
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id
     `,
     [
       data.title?.trim(),
@@ -47,11 +48,11 @@ exports.createNotification = async (data) => {
       data.type || "General",
       data.created_by || null,
       data.resident_id || null,
-      data.is_active ?? 1
+      data.is_active ?? true,
     ]
   );
 
-  return result.insertId;
+  return result.rows[0].id;
 };
 
 exports.updateNotification = async (id, data) => {
@@ -59,18 +60,18 @@ exports.updateNotification = async (id, data) => {
     `
     UPDATE notifications
     SET
-      title = ?,
-      message = ?,
-      type = ?,
-      is_active = ?
-    WHERE id = ?
+      title = $1,
+      message = $2,
+      type = $3,
+      is_active = $4
+    WHERE id = $5
     `,
     [
       data.title?.trim(),
       data.message?.trim(),
       data.type,
       data.is_active,
-      id
+      id,
     ]
   );
 };
@@ -79,7 +80,7 @@ exports.deleteNotification = async (id) => {
   await db.query(
     `
     DELETE FROM notifications
-    WHERE id = ?
+    WHERE id = $1
     `,
     [id]
   );
@@ -89,8 +90,8 @@ exports.archiveNotification = async (id) => {
   await db.query(
     `
     UPDATE notifications
-    SET is_active = 0
-    WHERE id = ?
+    SET is_active = FALSE
+    WHERE id = $1
     `,
     [id]
   );
@@ -100,15 +101,15 @@ exports.restoreNotification = async (id) => {
   await db.query(
     `
     UPDATE notifications
-    SET is_active = 1
-    WHERE id = ?
+    SET is_active = TRUE
+    WHERE id = $1
     `,
     [id]
   );
 };
 
 exports.getResidentNotifications = async (residentId) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT
       n.*,
@@ -119,133 +120,136 @@ exports.getResidentNotifications = async (residentId) => {
     FROM notifications n
     LEFT JOIN notification_reads nr
       ON n.id = nr.notification_id
-      AND nr.resident_id = ?
+      AND nr.resident_id = $1
     WHERE
-      n.is_active = 1
+      n.is_active = TRUE
       AND (
         n.resident_id IS NULL
-        OR n.resident_id = ?
+        OR n.resident_id = $2
       )
     ORDER BY n.created_at DESC
     `,
     [residentId, residentId]
   );
 
-  return rows;
+  return result.rows;
 };
 
 exports.markAsRead = async (notificationId, residentId) => {
   await db.query(
     `
-    INSERT IGNORE INTO notification_reads
+    INSERT INTO notification_reads
     (
       notification_id,
       resident_id
     )
-    VALUES (?, ?)
+    VALUES ($1, $2)
+    ON CONFLICT (notification_id, resident_id)
+    DO NOTHING
     `,
     [notificationId, residentId]
   );
 };
 
 exports.markAllAsRead = async (residentId) => {
-  const [notifications] = await db.query(
+  await db.query(
     `
-    SELECT id
+    INSERT INTO notification_reads
+    (
+      notification_id,
+      resident_id
+    )
+    SELECT
+      id,
+      $1
     FROM notifications
-    WHERE is_active = 1
-    `
+    WHERE is_active = TRUE
+    ON CONFLICT (notification_id, resident_id)
+    DO NOTHING
+    `,
+    [residentId]
   );
-
-  for (const item of notifications) {
-    await db.query(
-      `
-      INSERT IGNORE INTO notification_reads
-      (
-        notification_id,
-        resident_id
-      )
-      VALUES (?, ?)
-      `,
-      [item.id, residentId]
-    );
-  }
 };
 
 exports.getUnreadCount = async (residentId) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT COUNT(*) AS total
     FROM notifications n
     LEFT JOIN notification_reads nr
       ON n.id = nr.notification_id
-      AND nr.resident_id = ?
+      AND nr.resident_id = $1
     WHERE
       nr.id IS NULL
-      AND n.is_active = 1
+      AND n.is_active = TRUE
       AND (
         n.resident_id IS NULL
-        OR n.resident_id = ?
+        OR n.resident_id = $2
       )
     `,
     [residentId, residentId]
   );
 
-  return rows[0].total;
+  return Number(result.rows[0].total);
 };
 
 exports.searchNotifications = async (keyword) => {
   const search = `%${keyword}%`;
 
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM notifications
     WHERE
-      title LIKE ?
-      OR message LIKE ?
-      OR type LIKE ?
+      title ILIKE $1
+      OR message ILIKE $2
+      OR type ILIKE $3
     ORDER BY created_at DESC
     `,
     [search, search, search]
   );
 
-  return rows;
+  return result.rows;
 };
 
 exports.getNotificationsByType = async (type) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM notifications
     WHERE
-      type = ?
-      AND is_active = 1
+      type = $1
+      AND is_active = TRUE
     ORDER BY created_at DESC
     `,
     [type]
   );
 
-  return rows;
+  return result.rows;
 };
 
 exports.getLatestNotifications = async (limit = 10) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM notifications
-    WHERE is_active = 1
+    WHERE is_active = TRUE
     ORDER BY created_at DESC
-    LIMIT ?
+    LIMIT $1
     `,
     [Number(limit)]
   );
 
-  return rows;
+  return result.rows;
 };
 
-exports.createBirthdayNotification = async (residentId, title, message, createdBy = null) => {
-  const [result] = await db.query(
+exports.createBirthdayNotification = async (
+  residentId,
+  title,
+  message,
+  createdBy = null
+) => {
+  const result = await db.query(
     `
     INSERT INTO notifications
     (
@@ -256,21 +260,27 @@ exports.createBirthdayNotification = async (residentId, title, message, createdB
       resident_id,
       is_active
     )
-    VALUES (?, ?, 'Birthday', ?, ?, 1)
+    VALUES ($1, $2, 'Birthday', $3, $4, TRUE)
+    RETURNING id
     `,
     [
       title.trim(),
       message.trim(),
       createdBy,
-      residentId
+      residentId,
     ]
   );
 
-  return result.insertId;
+  return result.rows[0].id;
 };
 
-exports.createAnniversaryNotification = async (residentId, title, message, createdBy = null) => {
-  const [result] = await db.query(
+exports.createAnniversaryNotification = async (
+  residentId,
+  title,
+  message,
+  createdBy = null
+) => {
+  const result = await db.query(
     `
     INSERT INTO notifications
     (
@@ -281,17 +291,18 @@ exports.createAnniversaryNotification = async (residentId, title, message, creat
       resident_id,
       is_active
     )
-    VALUES (?, ?, 'Anniversary', ?, ?, 1)
+    VALUES ($1, $2, 'Anniversary', $3, $4, TRUE)
+    RETURNING id
     `,
     [
       title.trim(),
       message.trim(),
       createdBy,
-      residentId
+      residentId,
     ]
   );
 
-  return result.insertId;
+  return result.rows[0].id;
 };
 
 exports.createSystemNotification = async (
@@ -300,7 +311,7 @@ exports.createSystemNotification = async (
   type = "General",
   createdBy = null
 ) => {
-  const [result] = await db.query(
+  const result = await db.query(
     `
     INSERT INTO notifications
     (
@@ -310,38 +321,39 @@ exports.createSystemNotification = async (
       created_by,
       is_active
     )
-    VALUES (?, ?, ?, ?, 1)
+    VALUES ($1, $2, $3, $4, TRUE)
+    RETURNING id
     `,
     [
       title.trim(),
       message.trim(),
       type,
-      createdBy
+      createdBy,
     ]
   );
 
-  return result.insertId;
+  return result.rows[0].id;
 };
 
 exports.getNotificationCount = async () => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT COUNT(*) AS total
     FROM notifications
     `
   );
 
-  return rows[0].total;
+  return Number(result.rows[0].total);
 };
 
 exports.getActiveNotificationCount = async () => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT COUNT(*) AS total
     FROM notifications
-    WHERE is_active = 1
+    WHERE is_active = TRUE
     `
   );
 
-  return rows[0].total;
+  return Number(result.rows[0].total);
 };

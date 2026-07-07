@@ -1,8 +1,11 @@
 const db = require("../config/db");
 
+// ==============================
+// Get All Maintenance
+// ==============================
 exports.getAllMaintenance = async (req, res) => {
   try {
-    const [maintenance] = await db.query(`
+    const { rows: maintenance } = await db.query(`
       SELECT
         m.*,
         u.name,
@@ -27,13 +30,16 @@ exports.getAllMaintenance = async (req, res) => {
   }
 };
 
+// ==============================
+// Get My Maintenance
+// ==============================
 exports.getMyMaintenance = async (req, res) => {
   try {
-    const [maintenance] = await db.query(
+    const { rows: maintenance } = await db.query(
       `
       SELECT *
       FROM maintenance
-      WHERE user_id = ?
+      WHERE user_id = $1
       ORDER BY year DESC, month DESC
       `,
       [req.user.id]
@@ -53,6 +59,9 @@ exports.getMyMaintenance = async (req, res) => {
   }
 };
 
+// ==============================
+// Create Maintenance
+// ==============================
 exports.createMaintenance = async (req, res) => {
   try {
     const {
@@ -101,7 +110,7 @@ exports.createMaintenance = async (req, res) => {
         due_date,
         remarks
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
       `,
       [
         user_id,
@@ -133,6 +142,9 @@ exports.createMaintenance = async (req, res) => {
   }
 };
 
+// ==============================
+// Update Maintenance
+// ==============================
 exports.updateMaintenance = async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,23 +162,23 @@ exports.updateMaintenance = async (req, res) => {
     const other = Number(other_charges) || 0;
     const total = maintenance + water + other;
 
-    const [[bill]] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT amount_paid
       FROM maintenance
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!bill) {
+    if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Maintenance bill not found.",
       });
     }
 
-    const amountPaid = Number(bill.amount_paid);
+    const amountPaid = Number(rows[0].amount_paid);
     let balance = total - amountPaid;
     let status = "Pending";
 
@@ -181,15 +193,15 @@ exports.updateMaintenance = async (req, res) => {
       `
       UPDATE maintenance
       SET
-        maintenance_amount = ?,
-        water_charges = ?,
-        other_charges = ?,
-        total_amount = ?,
-        balance = ?,
-        status = ?,
-        due_date = ?,
-        remarks = ?
-      WHERE id = ?
+        maintenance_amount = $1,
+        water_charges = $2,
+        other_charges = $3,
+        total_amount = $4,
+        balance = $5,
+        status = $6,
+        due_date = $7,
+        remarks = $8
+      WHERE id = $9
       `,
       [
         maintenance,
@@ -218,21 +230,24 @@ exports.updateMaintenance = async (req, res) => {
   }
 };
 
+// ==============================
+// Mark Maintenance Paid
+// ==============================
 exports.markPaid = async (req, res) => {
   try {
     const { id } = req.params;
     const { amount_paid } = req.body;
 
-    const [[bill]] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT total_amount
       FROM maintenance
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!bill) {
+    if (rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Maintenance bill not found.",
@@ -241,7 +256,7 @@ exports.markPaid = async (req, res) => {
 
     const paid = Number(amount_paid) || 0;
 
-    let balance = Number(bill.total_amount) - paid;
+    let balance = Number(rows[0].total_amount) - paid;
     let status = "Pending";
 
     if (balance <= 0) {
@@ -255,11 +270,11 @@ exports.markPaid = async (req, res) => {
       `
       UPDATE maintenance
       SET
-        amount_paid = ?,
-        balance = ?,
-        status = ?,
-        payment_date = CURDATE()
-      WHERE id = ?
+        amount_paid = $1,
+        balance = $2,
+        status = $3,
+        payment_date = CURRENT_DATE
+      WHERE id = $4
       `,
       [
         paid,
@@ -283,19 +298,22 @@ exports.markPaid = async (req, res) => {
   }
 };
 
+// ==============================
+// Delete Maintenance
+// ==============================
 exports.deleteMaintenance = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       DELETE FROM maintenance
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Maintenance bill not found.",

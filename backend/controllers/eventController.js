@@ -1,8 +1,11 @@
 const db = require("../config/db");
 
+// ==============================
+// Get All Events
+// ==============================
 exports.getEvents = async (req, res) => {
   try {
-    const [events] = await db.query(`
+    const { rows: events } = await db.query(`
       SELECT *
       FROM events
       ORDER BY event_date DESC
@@ -22,6 +25,9 @@ exports.getEvents = async (req, res) => {
   }
 };
 
+// ==============================
+// Create Event
+// ==============================
 exports.createEvent = async (req, res) => {
   try {
     const { title, date, description, location } = req.body;
@@ -33,7 +39,7 @@ exports.createEvent = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       INSERT INTO events
       (
@@ -42,7 +48,8 @@ exports.createEvent = async (req, res) => {
         description,
         location
       )
-      VALUES (?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
       `,
       [
         title.trim(),
@@ -55,7 +62,7 @@ exports.createEvent = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Event created successfully.",
-      eventId: result.insertId,
+      eventId: result.rows[0].id,
     });
   } catch (error) {
     console.error("Create Event Error:", error);
@@ -67,16 +74,19 @@ exports.createEvent = async (req, res) => {
   }
 };
 
+// ==============================
+// Delete Event
+// ==============================
 exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
-      "DELETE FROM events WHERE id = ?",
+    const result = await db.query(
+      `DELETE FROM events WHERE id = $1`,
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Event not found.",

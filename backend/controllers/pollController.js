@@ -112,8 +112,7 @@ exports.updatePoll = async (req, res) => {
       option1,
       option2,
     } = req.body;
-
-    const [result] = await db.query(
+        const [result] = await db.query(
       `
       UPDATE polls
       SET
@@ -195,8 +194,7 @@ exports.votePoll = async (req, res) => {
         message: "Invalid option selected.",
       });
     }
-
-    const [[poll]] = await db.query(
+        const [[poll]] = await db.query(
       `
       SELECT *
       FROM polls
@@ -255,8 +253,7 @@ exports.getPollResults = async (req, res) => {
       `,
       [id]
     );
-
-    if (!poll) {
+        if (!poll) {
       return res.status(404).json({
         success: false,
         message: "Poll not found.",

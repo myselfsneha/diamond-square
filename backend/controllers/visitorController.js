@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 exports.getVisitors = async (req, res) => {
   try {
-    const [visitors] = await db.query(`
+    const result = await db.query(`
       SELECT
         v.id,
         v.resident_id,
@@ -24,7 +24,7 @@ exports.getVisitors = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      visitors,
+      visitors: result.rows,
     });
   } catch (error) {
     console.error("Get Visitors Error:", error);
@@ -46,31 +46,26 @@ exports.createVisitor = async (req, res) => {
       visit_date,
     } = req.body;
 
-    if (
-      !visitor_name ||
-      !phone ||
-      !purpose ||
-      !resident_id
-    ) {
+    if (!visitor_name || !phone || !purpose || !resident_id) {
       return res.status(400).json({
         success: false,
         message: "Required fields are missing.",
       });
     }
 
-    const [[resident]] = await db.query(
-      `SELECT id FROM users WHERE id = ?`,
+    const resident = await db.query(
+      `SELECT id FROM users WHERE id = $1`,
       [resident_id]
     );
 
-    if (!resident) {
+    if (resident.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Resident not found.",
       });
     }
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       INSERT INTO visitors
       (
@@ -81,7 +76,8 @@ exports.createVisitor = async (req, res) => {
         visit_date,
         status
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
       `,
       [
         resident_id,
@@ -96,7 +92,7 @@ exports.createVisitor = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Visitor request created successfully.",
-      visitorId: result.insertId,
+      visitorId: result.rows[0].id,
     });
   } catch (error) {
     console.error("Create Visitor Error:", error);
@@ -112,23 +108,23 @@ exports.approveVisitor = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       UPDATE visitors
       SET status = 'Approved'
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Visitor not found.",
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Visitor approved successfully.",
     });
@@ -146,25 +142,25 @@ exports.markEntry = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       UPDATE visitors
       SET
         status = 'Entered',
-        entry_time = NOW()
-      WHERE id = ?
+        entry_time = CURRENT_TIMESTAMP
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Visitor not found.",
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Entry recorded successfully.",
     });
@@ -182,25 +178,25 @@ exports.markExit = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       UPDATE visitors
       SET
         status = 'Exited',
-        exit_time = NOW()
-      WHERE id = ?
+        exit_time = CURRENT_TIMESTAMP
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Visitor not found.",
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Exit recorded successfully.",
     });
@@ -218,19 +214,19 @@ exports.deleteVisitor = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
-      `DELETE FROM visitors WHERE id = ?`,
+    const result = await db.query(
+      `DELETE FROM visitors WHERE id = $1`,
       [id]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Visitor not found.",
       });
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
       message: "Visitor deleted successfully.",
     });

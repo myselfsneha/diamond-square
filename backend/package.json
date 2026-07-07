@@ -21,8 +21,8 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
-    "mysql2": "^3.22.5",
     "node-cron": "^4.5.0",
+    "pg": "^8.22.0",
     "react-icons": "^5.7.0",
     "socket.io": "^4.8.3"
   },

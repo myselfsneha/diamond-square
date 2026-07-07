@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 exports.getPolls = async (req, res) => {
   try {
-    const [polls] = await db.query(`
+    const { rows: polls } = await db.query(`
       SELECT *
       FROM polls
       ORDER BY created_at DESC
@@ -26,14 +26,16 @@ exports.getPollById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [[poll]] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT *
       FROM polls
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
+
+    const poll = rows[0];
 
     if (!poll) {
       return res.status(404).json({
@@ -67,7 +69,7 @@ exports.createPoll = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
+    const { rows } = await db.query(
       `
       INSERT INTO polls
       (
@@ -77,7 +79,8 @@ exports.createPoll = async (req, res) => {
         votes_option1,
         votes_option2
       )
-      VALUES (?, ?, ?, 0, 0)
+      VALUES ($1, $2, $3, 0, 0)
+      RETURNING id
       `,
       [
         question.trim(),
@@ -89,7 +92,7 @@ exports.createPoll = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Poll created successfully.",
-      pollId: result.insertId,
+      pollId: rows[0].id,
     });
   } catch (error) {
     console.error("Create Poll Error:", error);
@@ -106,14 +109,14 @@ exports.updatePoll = async (req, res) => {
     const { id } = req.params;
     const { question, option1, option2 } = req.body;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       UPDATE polls
       SET
-        question = ?,
-        option1 = ?,
-        option2 = ?
-      WHERE id = ?
+        question = $1,
+        option1 = $2,
+        option2 = $3
+      WHERE id = $4
       `,
       [
         question,
@@ -123,7 +126,7 @@ exports.updatePoll = async (req, res) => {
       ]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Poll not found.",
@@ -157,28 +160,28 @@ exports.votePoll = async (req, res) => {
       });
     }
 
-    const [[poll]] = await db.query(
+    const { rows: polls } = await db.query(
       `
       SELECT id
       FROM polls
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!poll) {
+    if (!polls.length) {
       return res.status(404).json({
         success: false,
         message: "Poll not found.",
       });
     }
 
-    const [existingVote] = await db.query(
+    const { rows: existingVote } = await db.query(
       `
       SELECT id
       FROM poll_votes
-      WHERE poll_id = ?
-      AND user_id = ?
+      WHERE poll_id = $1
+      AND user_id = $2
       `,
       [id, userId]
     );
@@ -199,7 +202,7 @@ exports.votePoll = async (req, res) => {
       `
       UPDATE polls
       SET ${voteColumn} = ${voteColumn} + 1
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
@@ -212,7 +215,7 @@ exports.votePoll = async (req, res) => {
         user_id,
         selected_option
       )
-      VALUES (?, ?, ?)
+      VALUES ($1, $2, $3)
       `,
       [
         id,
@@ -239,7 +242,7 @@ exports.getPollResults = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [[poll]] = await db.query(
+    const { rows } = await db.query(
       `
       SELECT
         id,
@@ -249,10 +252,12 @@ exports.getPollResults = async (req, res) => {
         votes_option1,
         votes_option2
       FROM polls
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
+
+    const poll = rows[0];
 
     if (!poll) {
       return res.status(404).json({
@@ -279,15 +284,15 @@ exports.deletePoll = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       DELETE FROM polls
-      WHERE id = ?
+      WHERE id = $1
       `,
       [id]
     );
 
-    if (!result.affectedRows) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Poll not found.",

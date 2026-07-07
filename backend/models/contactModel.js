@@ -1,41 +1,38 @@
 const db = require("../config/db");
 
+const categoryOrder = `
+CASE category::text
+  WHEN 'committee' THEN 1
+  WHEN 'emergency' THEN 2
+  WHEN 'electrician' THEN 3
+  WHEN 'plumber' THEN 4
+  ELSE 5
+END
+`;
+
 exports.getAllContacts = async () => {
-  const [rows] = await db.query(`
+  const result = await db.query(`
     SELECT *
     FROM important_contacts
     ORDER BY
-      FIELD(
-        category,
-        'Committee',
-        'Security',
-        'Emergency',
-        'Maintenance',
-        'Electrician',
-        'Plumber',
-        'Lift Service',
-        'Housekeeping',
-        'Water Supplier',
-        'Gas Agency',
-        'Other'
-      ),
+      ${categoryOrder},
       name ASC
   `);
 
-  return rows;
+  return result.rows;
 };
 
 exports.getContactById = async (id) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM important_contacts
-    WHERE id = ?
+    WHERE id = $1
     `,
     [id]
   );
 
-  return rows[0] || null;
+  return result.rows[0] || null;
 };
 
 exports.createContact = async (data) => {
@@ -44,7 +41,7 @@ exports.createContact = async (data) => {
   const phone = data.phone?.trim();
   const category = data.category?.trim();
 
-  const [result] = await db.query(
+  const result = await db.query(
     `
     INSERT INTO important_contacts
     (
@@ -53,17 +50,18 @@ exports.createContact = async (data) => {
       phone,
       category
     )
-    VALUES (?, ?, ?, ?)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id
     `,
     [
       name,
       designation,
       phone,
-      category
+      category,
     ]
   );
 
-  return result.insertId;
+  return result.rows[0].id;
 };
 
 exports.updateContact = async (id, data) => {
@@ -76,18 +74,18 @@ exports.updateContact = async (id, data) => {
     `
     UPDATE important_contacts
     SET
-      name = ?,
-      designation = ?,
-      phone = ?,
-      category = ?
-    WHERE id = ?
+      name = $1,
+      designation = $2,
+      phone = $3,
+      category = $4
+    WHERE id = $5
     `,
     [
       name,
       designation,
       phone,
       category,
-      id
+      id,
     ]
   );
 };
@@ -96,7 +94,7 @@ exports.deleteContact = async (id) => {
   await db.query(
     `
     DELETE FROM important_contacts
-    WHERE id = ?
+    WHERE id = $1
     `,
     [id]
   );
@@ -105,78 +103,65 @@ exports.deleteContact = async (id) => {
 exports.searchContacts = async (keyword) => {
   const search = `%${keyword}%`;
 
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM important_contacts
     WHERE
-      name LIKE ?
-      OR designation LIKE ?
-      OR category LIKE ?
-      OR phone LIKE ?
+      name ILIKE $1
+      OR designation ILIKE $2
+      OR category ILIKE $3
+      OR phone ILIKE $4
     ORDER BY
-      FIELD(
-        category,
-        'Committee',
-        'Security',
-        'Emergency',
-        'Maintenance',
-        'Electrician',
-        'Plumber',
-        'Lift Service',
-        'Housekeeping',
-        'Water Supplier',
-        'Gas Agency',
-        'Other'
-      ),
+      ${categoryOrder},
       name ASC
     `,
     [
       search,
       search,
       search,
-      search
+      search,
     ]
   );
 
-  return rows;
+  return result.rows;
 };
 
 exports.getContactsByCategory = async (category) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT *
     FROM important_contacts
-    WHERE category = ?
+    WHERE category = $1
     ORDER BY name ASC
     `,
     [category]
   );
 
-  return rows;
+  return result.rows;
 };
 
 exports.getContactCount = async () => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT COUNT(*) AS total
     FROM important_contacts
     `
   );
 
-  return rows[0].total;
+  return Number(result.rows[0].total);
 };
 
 exports.contactExists = async (phone) => {
-  const [rows] = await db.query(
+  const result = await db.query(
     `
     SELECT id
     FROM important_contacts
-    WHERE phone = ?
+    WHERE phone = $1
     LIMIT 1
     `,
     [phone]
   );
 
-  return rows.length > 0;
+  return result.rows.length > 0;
 };

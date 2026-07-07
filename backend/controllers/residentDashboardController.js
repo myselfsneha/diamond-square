@@ -5,23 +5,23 @@ exports.getResidentDashboard = async (req, res) => {
     const userId = req.user.id;
 
     const [
-      [complaints],
-      [maintenance],
-      [events],
-      [polls],
-      [recentComplaints],
-      [recentNotices],
-      [upcomingEvents],
-      [recentVisitors],
+      complaintsResult,
+      maintenanceResult,
+      eventsResult,
+      pollsResult,
+      recentComplaintsResult,
+      recentNoticesResult,
+      upcomingEventsResult,
+      recentVisitorsResult,
     ] = await Promise.all([
       db.query(
         `
         SELECT
-          COUNT(*) AS totalComplaints,
-          SUM(CASE WHEN status != 'Resolved' THEN 1 ELSE 0 END) AS openComplaints,
-          SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) AS resolvedComplaints
+          COUNT(*)::int AS "totalComplaints",
+          COUNT(*) FILTER (WHERE status <> 'Resolved')::int AS "openComplaints",
+          COUNT(*) FILTER (WHERE status = 'Resolved')::int AS "resolvedComplaints"
         FROM complaints
-        WHERE user_id = ?
+        WHERE user_id = $1
         `,
         [userId]
       ),
@@ -29,28 +29,28 @@ exports.getResidentDashboard = async (req, res) => {
       db.query(
         `
         SELECT
-          COUNT(*) AS totalBills,
-          SUM(CASE WHEN status='Paid' THEN 1 ELSE 0 END) AS paidBills,
-          SUM(CASE WHEN status='Pending' THEN 1 ELSE 0 END) AS pendingBills,
-          SUM(CASE WHEN status='Partially Paid' THEN 1 ELSE 0 END) AS partialBills,
-          COALESCE(SUM(balance),0) AS totalBalance
+          COUNT(*)::int AS "totalBills",
+          COUNT(*) FILTER (WHERE status = 'Paid')::int AS "paidBills",
+          COUNT(*) FILTER (WHERE status = 'Pending')::int AS "pendingBills",
+          COUNT(*) FILTER (WHERE status = 'Partially Paid')::int AS "partialBills",
+          COALESCE(SUM(balance),0)::numeric AS "totalBalance"
         FROM maintenance
-        WHERE user_id = ?
+        WHERE user_id = $1
         `,
         [userId]
       ),
 
       db.query(
         `
-        SELECT COUNT(*) AS totalEvents
+        SELECT COUNT(*)::int AS "totalEvents"
         FROM events
-        WHERE event_date >= CURDATE()
+        WHERE event_date >= CURRENT_DATE
         `
       ),
 
       db.query(
         `
-        SELECT COUNT(*) AS totalPolls
+        SELECT COUNT(*)::int AS "totalPolls"
         FROM polls
         `
       ),
@@ -63,7 +63,7 @@ exports.getResidentDashboard = async (req, res) => {
           status,
           created_at
         FROM complaints
-        WHERE user_id = ?
+        WHERE user_id = $1
         ORDER BY created_at DESC
         LIMIT 5
         `,
@@ -90,7 +90,7 @@ exports.getResidentDashboard = async (req, res) => {
           event_date,
           description
         FROM events
-        WHERE event_date >= CURDATE()
+        WHERE event_date >= CURRENT_DATE
         ORDER BY event_date ASC
         LIMIT 5
         `
@@ -104,7 +104,7 @@ exports.getResidentDashboard = async (req, res) => {
           status,
           visit_date
         FROM visitors
-        WHERE resident_id = ?
+        WHERE resident_id = $1
         ORDER BY visit_date DESC
         LIMIT 5
         `,
@@ -112,31 +112,40 @@ exports.getResidentDashboard = async (req, res) => {
       ),
     ]);
 
-        res.json({
+    const complaints = complaintsResult.rows[0];
+    const maintenance = maintenanceResult.rows[0];
+    const events = eventsResult.rows[0];
+    const polls = pollsResult.rows[0];
+
+    return res.json({
+      success: true,
       stats: {
-        totalComplaints: complaints[0]?.totalComplaints || 0,
-        openComplaints: complaints[0]?.openComplaints || 0,
-        resolvedComplaints: complaints[0]?.resolvedComplaints || 0,
+        totalComplaints: complaints.totalComplaints || 0,
+        openComplaints: complaints.openComplaints || 0,
+        resolvedComplaints: complaints.resolvedComplaints || 0,
 
-        totalMaintenanceBills: maintenance[0]?.totalBills || 0,
-        paidBills: maintenance[0]?.paidBills || 0,
-        pendingBills: maintenance[0]?.pendingBills || 0,
-        partialBills: maintenance[0]?.partialBills || 0,
-        outstandingBalance: maintenance[0]?.totalBalance || 0,
+        totalMaintenanceBills: maintenance.totalBills || 0,
+        paidBills: maintenance.paidBills || 0,
+        pendingBills: maintenance.pendingBills || 0,
+        partialBills: maintenance.partialBills || 0,
+        outstandingBalance: maintenance.totalBalance || 0,
 
-        totalEvents: events[0]?.totalEvents || 0,
-        totalPolls: polls[0]?.totalPolls || 0,
+        totalEvents: events.totalEvents || 0,
+        totalPolls: polls.totalPolls || 0,
       },
 
-      recentComplaints,
-      recentNotices,
-      upcomingEvents,
-      recentVisitors,
+      recentComplaints: recentComplaintsResult.rows,
+      recentNotices: recentNoticesResult.rows,
+      upcomingEvents: upcomingEventsResult.rows,
+      recentVisitors: recentVisitorsResult.rows,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
+    console.error("Resident Dashboard Error:", error);
+
+    return res.status(500).json({
+      success: false,
       message: "Failed to load resident dashboard",
+      error: error.message,
     });
   }
 };

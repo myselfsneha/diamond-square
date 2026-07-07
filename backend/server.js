@@ -5,8 +5,10 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
+// Database Connection
 require("./config/db");
 
+// Routes
 const authRoutes = require("./routes/authRoutes");
 const testRoutes = require("./routes/testRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -25,23 +27,35 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const residentDashboardRoutes = require("./routes/residentDashboardRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
-const startBirthdayScheduler = require("./utils/birthdayScheduler");
 const reportRoutes = require("./routes/reports");
+
+// Utilities
+const startBirthdayScheduler = require("./utils/birthdayScheduler");
 
 const app = express();
 
+// ==========================
 // Middleware
+// ==========================
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
+// ==========================
 // Root Route
+// ==========================
 app.get("/", (req, res) => {
-  res.send("Diamond Square API Running");
+  res.status(200).json({
+    success: true,
+    message: "Diamond Square API Running",
+  });
 });
 
+// ==========================
 // API Routes
+// ==========================
 app.use("/api/auth", authRoutes);
 app.use("/api/test", testRoutes);
 app.use("/api/admin", adminRoutes);
@@ -62,9 +76,14 @@ app.use("/api/resident-dashboard", residentDashboardRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/reports", reportRoutes);
 
+// ==========================
+// Start Cron Jobs
+// ==========================
 startBirthdayScheduler();
 
+// ==========================
 // 404 Handler
+// ==========================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -72,7 +91,9 @@ app.use((req, res) => {
   });
 });
 
+// ==========================
 // Global Error Handler
+// ==========================
 app.use((err, req, res, next) => {
   console.error(err);
 
@@ -82,8 +103,11 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ==========================
+// Start Server
+// ==========================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Diamond Square Server running on port ${PORT}`);
 });

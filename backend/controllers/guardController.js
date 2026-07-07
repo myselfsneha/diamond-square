@@ -1,8 +1,11 @@
 const db = require("../config/db");
 
+// ==============================
+// Get All Guards
+// ==============================
 exports.getGuards = async (req, res) => {
   try {
-    const [guards] = await db.query(`
+    const { rows: guards } = await db.query(`
       SELECT *
       FROM guards
       ORDER BY created_at DESC
@@ -22,6 +25,9 @@ exports.getGuards = async (req, res) => {
   }
 };
 
+// ==============================
+// Create Guard
+// ==============================
 exports.createGuard = async (req, res) => {
   try {
     const { name, phone, shift } = req.body;
@@ -33,7 +39,7 @@ exports.createGuard = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
+    const result = await db.query(
       `
       INSERT INTO guards
       (
@@ -41,7 +47,8 @@ exports.createGuard = async (req, res) => {
         phone,
         shift
       )
-      VALUES (?, ?, ?)
+      VALUES ($1, $2, $3)
+      RETURNING id
       `,
       [
         name.trim(),
@@ -53,7 +60,7 @@ exports.createGuard = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Guard added successfully.",
-      guardId: result.insertId,
+      guardId: result.rows[0].id,
     });
   } catch (error) {
     console.error("Create Guard Error:", error);
@@ -65,16 +72,19 @@ exports.createGuard = async (req, res) => {
   }
 };
 
+// ==============================
+// Delete Guard
+// ==============================
 exports.deleteGuard = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const [result] = await db.query(
-      "DELETE FROM guards WHERE id = ?",
+    const result = await db.query(
+      `DELETE FROM guards WHERE id = $1`,
       [id]
     );
 
-    if (result.affectedRows === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({
         success: false,
         message: "Guard not found.",

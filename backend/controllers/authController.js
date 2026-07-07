@@ -13,9 +13,6 @@ const generateOTP = () => {
 // ==============================
 // Register
 // ==============================
-// ==============================
-// Register
-// ==============================
 exports.register = async (req, res) => {
   try {
     const {
@@ -53,8 +50,8 @@ exports.register = async (req, res) => {
       });
     }
 
-    const [existingUsers] = await db.query(
-      `SELECT id FROM users WHERE email=? OR phone=?`,
+    const { rows: existingUsers } = await db.query(
+      `SELECT id FROM users WHERE email = $1 OR phone = $2`,
       [
         email.trim().toLowerCase(),
         phone.trim(),
@@ -77,10 +74,9 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const [result] = await db.query(
+    const { rows } = await db.query(
       `
-      INSERT INTO users
-      (
+      INSERT INTO users (
         name,
         email,
         phone,
@@ -98,16 +94,15 @@ exports.register = async (req, res) => {
         otp_verified,
         is_active
       )
-      VALUES
-      (
-        ?,?,?,?,?,?,?,?,?,?,
-        ?,
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
         'pending',
         NULL,
         NULL,
-        0,
-        1
+        FALSE,
+        TRUE
       )
+      RETURNING id
       `,
       [
         name.trim(),
@@ -128,7 +123,7 @@ exports.register = async (req, res) => {
       success: true,
       message:
         "Registration submitted successfully. Please wait for admin approval.",
-      userId: result.insertId,
+      userId: rows[0].id,
     });
 
   } catch (error) {
@@ -154,8 +149,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      `SELECT * FROM users WHERE phone = ?`,
+    const { rows: users } = await db.query(
+      `SELECT * FROM users WHERE phone = $1`,
       [phone.trim()]
     );
 
@@ -175,7 +170,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    if (user.is_active === 0) {
+    if (!user.is_active) {
       return res.status(403).json({
         success: false,
         message: "Your account has been temporarily suspended.",
@@ -231,7 +226,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
 // ==============================
 // Verify OTP (MSG91)
 // ==============================
@@ -261,8 +255,8 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      "SELECT * FROM users WHERE phone = ?",
+    const { rows: users } = await db.query(
+      `SELECT * FROM users WHERE phone = $1`,
       [phone]
     );
 
@@ -279,9 +273,9 @@ exports.verifyOtp = async (req, res) => {
       `
       UPDATE users
       SET
-        approval_status='approved',
-        otp_verified=1
-      WHERE id=?
+        approval_status = 'approved',
+        otp_verified = TRUE
+      WHERE id = $1
       `,
       [user.id]
     );
@@ -314,7 +308,6 @@ exports.verifyOtp = async (req, res) => {
     });
   }
 };
-
 // ==============================
 // Verify OTP (Manual)
 // ==============================
@@ -329,8 +322,8 @@ exports.verifyOtpWithCode = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      `SELECT * FROM users WHERE phone = ?`,
+    const { rows: users } = await db.query(
+      `SELECT * FROM users WHERE phone = $1`,
       [phone.trim()]
     );
 
@@ -359,10 +352,10 @@ exports.verifyOtpWithCode = async (req, res) => {
       UPDATE users
       SET
         approval_status = 'approved',
-        otp_verified = 1,
+        otp_verified = TRUE,
         approval_otp = NULL,
         otp_expires_at = NULL
-      WHERE id = ?
+      WHERE id = $1
       `,
       [user.id]
     );
@@ -396,12 +389,13 @@ exports.verifyOtpWithCode = async (req, res) => {
     });
   }
 };
+
 // ==============================
 // Get Profile
 // ==============================
 exports.getProfile = async (req, res) => {
   try {
-    const [users] = await db.query(
+    const { rows: users } = await db.query(
       `
       SELECT
         id,
@@ -421,7 +415,7 @@ exports.getProfile = async (req, res) => {
         anniversary_date,
         created_at
       FROM users
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.user.id]
     );
@@ -447,7 +441,6 @@ exports.getProfile = async (req, res) => {
     });
   }
 };
-
 
 // ==============================
 // Update Profile
@@ -480,16 +473,16 @@ exports.updateProfile = async (req, res) => {
       `
       UPDATE users
       SET
-        name = ?,
-        email = ?,
-        phone = ?,
-        resident_type = ?,
-        flat_number = ?,
-        emergency_contact = ?,
-        occupation = ?,
-        date_of_birth = ?,
-        anniversary_date = ?
-      WHERE id = ?
+        name = $1,
+        email = $2,
+        phone = $3,
+        resident_type = $4,
+        flat_number = $5,
+        emergency_contact = $6,
+        occupation = $7,
+        date_of_birth = $8,
+        anniversary_date = $9
+      WHERE id = $10
       `,
       [
         name?.trim(),
@@ -526,11 +519,11 @@ exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const [users] = await db.query(
+    const { rows: users } = await db.query(
       `
       SELECT password
       FROM users
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.user.id]
     );
@@ -566,8 +559,8 @@ exports.changePassword = async (req, res) => {
     await db.query(
       `
       UPDATE users
-      SET password = ?
-      WHERE id = ?
+      SET password = $1
+      WHERE id = $2
       `,
       [hashedPassword, req.user.id]
     );
@@ -587,7 +580,6 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-
 // ==============================
 // Upload Profile Image
 // ==============================
@@ -603,8 +595,8 @@ exports.uploadProfileImage = async (req, res) => {
     await db.query(
       `
       UPDATE users
-      SET profile_image = ?
-      WHERE id = ?
+      SET profile_image = $1
+      WHERE id = $2
       `,
       [req.file.filename, req.user.id]
     );
@@ -624,6 +616,7 @@ exports.uploadProfileImage = async (req, res) => {
     });
   }
 };
+
 // ==============================
 // Switch Dashboard
 // ==============================
@@ -638,11 +631,11 @@ exports.switchDashboard = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
+    const { rows: users } = await db.query(
       `
       SELECT role
       FROM users
-      WHERE id = ?
+      WHERE id = $1
       `,
       [req.user.id]
     );
@@ -677,7 +670,6 @@ exports.switchDashboard = async (req, res) => {
   }
 };
 
-
 // ==============================
 // Logout
 // ==============================
@@ -687,8 +679,6 @@ exports.logout = async (req, res) => {
     message: "Logged out successfully.",
   });
 };
-
-
 // ==============================
 // Forgot Password
 // ==============================
@@ -703,8 +693,8 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      `SELECT id FROM users WHERE phone = ?`,
+    const { rows: users } = await db.query(
+      `SELECT id FROM users WHERE phone = $1`,
       [phone.trim()]
     );
 
@@ -722,9 +712,9 @@ exports.forgotPassword = async (req, res) => {
       `
       UPDATE users
       SET
-        approval_otp = ?,
-        otp_expires_at = ?
-      WHERE phone = ?
+        approval_otp = $1,
+        otp_expires_at = $2
+      WHERE phone = $3
       `,
       [otp, expiry, phone.trim()]
     );
@@ -747,7 +737,6 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-
 // ==============================
 // Reset Password
 // ==============================
@@ -762,8 +751,8 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    const [users] = await db.query(
-      `SELECT * FROM users WHERE phone = ?`,
+    const { rows: users } = await db.query(
+      `SELECT * FROM users WHERE phone = $1`,
       [phone.trim()]
     );
 
@@ -800,10 +789,10 @@ exports.resetPassword = async (req, res) => {
       `
       UPDATE users
       SET
-        password = ?,
+        password = $1,
         approval_otp = NULL,
         otp_expires_at = NULL
-      WHERE id = ?
+      WHERE id = $2
       `,
       [hashedPassword, user.id]
     );

@@ -1,5 +1,8 @@
 const db = require("../config/db");
 
+// ==============================
+// Admin Dashboard
+// ==============================
 exports.getDashboardStats = async (req, res) => {
   try {
     const [
@@ -15,14 +18,12 @@ exports.getDashboardStats = async (req, res) => {
       recentResidents,
       upcomingEvents,
     ] = await Promise.all([
-      // Total Residents
       db.query(`
         SELECT COUNT(*) AS total
         FROM users
         WHERE role = 'resident'
       `),
 
-      // Pending Approvals
       db.query(`
         SELECT COUNT(*) AS total
         FROM users
@@ -30,44 +31,37 @@ exports.getDashboardStats = async (req, res) => {
           AND approval_status = 'pending'
       `),
 
-      // Total Complaints
       db.query(`
         SELECT COUNT(*) AS total
         FROM complaints
       `),
 
-      // Resolved Complaints
       db.query(`
         SELECT COUNT(*) AS total
         FROM complaints
         WHERE status = 'Resolved'
       `),
 
-      // Total Events
       db.query(`
         SELECT COUNT(*) AS total
         FROM events
       `),
 
-      // Total Polls
       db.query(`
         SELECT COUNT(*) AS total
         FROM polls
       `),
 
-      // Total Guards
       db.query(`
         SELECT COUNT(*) AS total
         FROM guards
       `),
 
-      // Total Notices
       db.query(`
         SELECT COUNT(*) AS total
         FROM notices
       `),
 
-      // Recent Complaints
       db.query(`
         SELECT
           c.id,
@@ -82,7 +76,6 @@ exports.getDashboardStats = async (req, res) => {
         LIMIT 5
       `),
 
-      // Recent Residents
       db.query(`
         SELECT
           id,
@@ -96,7 +89,6 @@ exports.getDashboardStats = async (req, res) => {
         LIMIT 5
       `),
 
-      // Upcoming Events
       db.query(`
         SELECT
           id,
@@ -104,25 +96,25 @@ exports.getDashboardStats = async (req, res) => {
           location,
           event_date
         FROM events
-        WHERE event_date >= CURDATE()
+        WHERE event_date >= CURRENT_DATE
         ORDER BY event_date ASC
         LIMIT 5
       `),
     ]);
 
     res.status(200).json({
-      totalMembers: members[0][0].total,
-      pendingApprovals: pending[0][0].total,
-      totalComplaints: complaints[0][0].total,
-      resolvedComplaints: resolved[0][0].total,
-      totalEvents: events[0][0].total,
-      totalPolls: polls[0][0].total,
-      totalGuards: guards[0][0].total,
-      totalNotices: notices[0][0].total,
+      totalMembers: members.rows[0].total,
+      pendingApprovals: pending.rows[0].total,
+      totalComplaints: complaints.rows[0].total,
+      resolvedComplaints: resolved.rows[0].total,
+      totalEvents: events.rows[0].total,
+      totalPolls: polls.rows[0].total,
+      totalGuards: guards.rows[0].total,
+      totalNotices: notices.rows[0].total,
 
-      recentComplaints: recentComplaints[0],
-      recentResidents: recentResidents[0],
-      upcomingEvents: upcomingEvents[0],
+      recentComplaints: recentComplaints.rows,
+      recentResidents: recentResidents.rows,
+      upcomingEvents: upcomingEvents.rows,
     });
   } catch (err) {
     console.error("Dashboard Error:", err);
@@ -134,11 +126,15 @@ exports.getDashboardStats = async (req, res) => {
     });
   }
 };
+
+// ==============================
+// Resident Dashboard
+// ==============================
 exports.getResidentDashboard = async (req, res) => {
   try {
     const residentId = req.user.id;
 
-    const [[resident]] = await db.query(
+    const { rows: residentRows } = await db.query(
       `
       SELECT
         id,
@@ -146,41 +142,43 @@ exports.getResidentDashboard = async (req, res) => {
         flat_number,
         approval_status
       FROM users
-      WHERE id = ?
+      WHERE id = $1
       `,
       [residentId]
     );
 
-    const [[totalComplaints]] = await db.query(
+    const resident = residentRows[0];
+
+    const { rows: totalComplaintRows } = await db.query(
       `
       SELECT COUNT(*) AS total
       FROM complaints
-      WHERE user_id = ?
+      WHERE user_id = $1
       `,
       [residentId]
     );
 
-    const [[resolvedComplaints]] = await db.query(
+    const { rows: resolvedComplaintRows } = await db.query(
       `
       SELECT COUNT(*) AS total
       FROM complaints
-      WHERE user_id = ?
+      WHERE user_id = $1
       AND status = 'Resolved'
       `,
       [residentId]
     );
 
-    const [[pendingComplaints]] = await db.query(
+    const { rows: pendingComplaintRows } = await db.query(
       `
       SELECT COUNT(*) AS total
       FROM complaints
-      WHERE user_id = ?
+      WHERE user_id = $1
       AND status != 'Resolved'
       `,
       [residentId]
     );
 
-    const [recentComplaints] = await db.query(
+    const { rows: recentComplaints } = await db.query(
       `
       SELECT
         id,
@@ -188,14 +186,14 @@ exports.getResidentDashboard = async (req, res) => {
         status,
         created_at
       FROM complaints
-      WHERE user_id = ?
+      WHERE user_id = $1
       ORDER BY created_at DESC
       LIMIT 5
       `,
       [residentId]
     );
 
-    const [upcomingEvents] = await db.query(
+    const { rows: upcomingEvents } = await db.query(
       `
       SELECT
         id,
@@ -203,13 +201,13 @@ exports.getResidentDashboard = async (req, res) => {
         location,
         event_date
       FROM events
-      WHERE event_date >= CURDATE()
+      WHERE event_date >= CURRENT_DATE
       ORDER BY event_date ASC
       LIMIT 5
       `
     );
 
-    const [latestNotices] = await db.query(
+    const { rows: latestNotices } = await db.query(
       `
       SELECT
         id,
@@ -223,9 +221,9 @@ exports.getResidentDashboard = async (req, res) => {
 
     return res.status(200).json({
       resident,
-      totalComplaints: totalComplaints.total,
-      resolvedComplaints: resolvedComplaints.total,
-      pendingComplaints: pendingComplaints.total,
+      totalComplaints: totalComplaintRows[0].total,
+      resolvedComplaints: resolvedComplaintRows[0].total,
+      pendingComplaints: pendingComplaintRows[0].total,
       recentComplaints,
       upcomingEvents,
       latestNotices,
@@ -240,4 +238,7 @@ exports.getResidentDashboard = async (req, res) => {
   }
 };
 
+// ==============================
+// Admin Dashboard Alias
+// ==============================
 exports.getAdminDashboard = exports.getDashboardStats;
