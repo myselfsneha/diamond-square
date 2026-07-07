@@ -6,6 +6,15 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Bell,
+  Sun,
+  Moon,
+  Building2,
+  Phone,
+  LogIn,
+  ShieldCheck,
+  Smartphone,
+  Headphones,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../services/api";
