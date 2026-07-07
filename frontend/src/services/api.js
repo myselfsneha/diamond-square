@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 | API Base URL
 |--------------------------------------------------------------------------
 | Production:
-| VITE_API_URL=https://your-domain.com/api
+| REACT_APP_API_URL=https://diamond-square-backend.onrender.com/api
 |
 | Development:
 | http://localhost:5000/api
@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 */
 
 const BASE_URL =
-  import.meta.env.VITE_API_URL ||
+  process.env.REACT_APP_API_URL ||
   "http://localhost:5000/api";
 
 const api = axios.create({
@@ -60,10 +60,7 @@ api.interceptors.response.use(
 
     switch (status) {
       case 400:
-        toast.error(
-          error.response?.data?.message ||
-            "Invalid request."
-        );
+        toast.error(error.response?.data?.message || "Invalid request.");
         break;
 
       case 401:
@@ -81,50 +78,32 @@ api.interceptors.response.use(
         break;
 
       case 403:
-        toast.error(
-          error.response?.data?.message ||
-            "Access denied."
-        );
+        toast.error(error.response?.data?.message || "Access denied.");
         break;
 
       case 404:
-        toast.error(
-          error.response?.data?.message ||
-            "Resource not found."
-        );
+        toast.error(error.response?.data?.message || "Resource not found.");
         break;
 
       case 409:
-        toast.warning(
-          error.response?.data?.message ||
-            "Conflict detected."
-        );
+        toast.warning(error.response?.data?.message || "Conflict detected.");
         break;
 
       case 422:
-        toast.warning(
-          error.response?.data?.message ||
-            "Validation failed."
-        );
+        toast.warning(error.response?.data?.message || "Validation failed.");
         break;
 
       case 429:
-        toast.warning(
-          "Too many requests. Please wait."
-        );
+        toast.warning("Too many requests. Please wait.");
         break;
 
       case 500:
-        toast.error(
-          "Server error. Please try again later."
-        );
+        toast.error("Server error. Please try again later.");
         break;
 
       default:
         if (!error.response) {
-          toast.error(
-            "Unable to connect to server."
-          );
+          toast.error("Unable to connect to server.");
         }
     }
 
@@ -143,9 +122,7 @@ export const auth = {
 
   getUser: () => {
     try {
-      return JSON.parse(
-        localStorage.getItem("user")
-      );
+      return JSON.parse(localStorage.getItem("user"));
     } catch {
       return null;
     }
@@ -157,16 +134,8 @@ export const auth = {
 
   login(data) {
     localStorage.setItem("token", data.token);
-
-    localStorage.setItem(
-      "user",
-      JSON.stringify(data.user)
-    );
-
-    localStorage.setItem(
-      "role",
-      data.user?.role || "resident"
-    );
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("role", data.user?.role || "resident");
   },
 
   logout() {
@@ -182,16 +151,12 @@ export const auth = {
 |--------------------------------------------------------------------------
 */
 
-export const login = (data) =>
-  api.post("/auth/login", data);
+export const login = (data) => api.post("/auth/login", data);
 
-export const register = (data) =>
-  api.post("/auth/register", data);
+export const register = (data) => api.post("/auth/register", data);
 
 export const forgotPassword = (phone) =>
-  api.post("/auth/forgot-password", {
-    phone,
-  });
+  api.post("/auth/forgot-password", { phone });
 
 export const verifyOTP = (data) =>
   api.post("/auth/verify-otp", data);
