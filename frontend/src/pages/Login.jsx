@@ -2,19 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  Phone,
+  User,
   Lock,
   Eye,
   EyeOff,
-  LogIn,
-  Building2,
-  ShieldCheck,
-  Moon,
-  Sun,
-  Bell,
-  Smartphone,
-  UserCog,
-  Headphones,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../services/api";
