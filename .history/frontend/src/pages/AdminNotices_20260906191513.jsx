@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
 
+import TableHeader from "../components/table/TableHeader";
 import TableSearch from "../components/table/TableSearch";
 import DataTable from "../components/table/DataTable";
 import TablePagination from "../components/table/TablePagination";

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { ShieldCheck, Plus, RefreshCw } from "lucide-react";
 import { toast } from "react-toastify";
 import Navbar from "../components/Navbar";
 import api from "../services/api";
