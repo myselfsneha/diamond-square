@@ -30,14 +30,19 @@ exports.getEvents = async (req, res) => {
 // ==============================
 exports.createEvent = async (req, res) => {
   try {
-    const { title, date, description, location } = req.body;
+    const {
+  title,
+  event_date,
+  description,
+  location,
+} = req.body;
 
-    if (!title || !date) {
-      return res.status(400).json({
-        success: false,
-        message: "Title and event date are required.",
-      });
-    }
+if (!title || !event_date) {
+  return res.status(400).json({
+    success: false,
+    message: "Title and event date are required.",
+  });
+}
 
     const result = await db.query(
       `
@@ -52,11 +57,11 @@ exports.createEvent = async (req, res) => {
       RETURNING id
       `,
       [
-        title.trim(),
-        date,
-        description?.trim() || "",
-        location?.trim() || null,
-      ]
+  title.trim(),
+  event_date,
+  description?.trim() || "",
+  location?.trim() || null,
+]
     );
 
     return res.status(201).json({
