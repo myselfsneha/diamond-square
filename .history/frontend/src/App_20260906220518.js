@@ -26,7 +26,7 @@ import ChangePassword from "./pages/ChangePassword";
 import Settings from "./pages/Settings";
 import EditProfile from "./pages/EditProfile";
 import Documents from "./pages/Documents";
-import Events from "./pages/Events";
+
 
 import AdminComplaints from "./pages/AdminComplaints";
 import AdminNotices from "./pages/AdminNotices";
@@ -149,15 +149,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            <Route
-  path="/events"
-  element={
-    <ProtectedRoute>
-      <Events />
-    </ProtectedRoute>
-  }
-/>
 
             <Route
               path="/contacts"

@@ -151,15 +151,6 @@ function App() {
             />
 
             <Route
-  path="/events"
-  element={
-    <ProtectedRoute>
-      <Events />
-    </ProtectedRoute>
-  }
-/>
-
-            <Route
               path="/contacts"
               element={
                 <ProtectedRoute>
