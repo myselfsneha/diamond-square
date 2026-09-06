@@ -1,0 +1,448 @@
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  User,
+  Bell,
+  Menu,
+  FileText,
+  ClipboardList,
+  CreditCard,
+  FolderOpen,
+  Phone,
+  CalendarDays,
+  Users,
+  ArrowRight,
+  Cake,
+  Sparkles,
+  MapPin,
+} from "lucide-react";
+import Navbar from "../components/Navbar";
+
+function Dashboard() {
+  const [user, setUser] =useState({});
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    setUser(storedUser);
+
+    fetchDashboard();
+  }, []);
+
+  const fetchDashboard = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found.");
+      return;
+    }
+
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const endpoint =
+      storedUser.role === "admin"
+        ? "http://localhost:5000/api/dashboard/admin"
+        : "http://localhost:5000/api/dashboard/resident";
+
+    try {
+      const res = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      console.log(data);
+
+      setDashboard(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+
+    if (hour >= 5 && hour < 12) return "☀️ Good Morning";
+    if (hour >= 12 && hour < 17) return "🌤️ Good Afternoon";
+    if (hour >= 17 && hour < 21) return "🌆 Good Evening";
+    return "🌙 Good Night";
+  };
+
+  const firstName = user.name?.split(" ")[0] || "Resident";
+
+  const statIcons = {
+    "Registered Residents": <Users size={22} />,
+    "Pending Approvals": <FileText size={22} />,
+    "Visitors Today": <User size={22} />,
+    "Open Complaints": <ClipboardList size={22} />,
+    "Maintenance Due": <CreditCard size={22} />,
+    "Active Notices": <Bell size={22} />,
+    "Upcoming Events": <CalendarDays size={22} />,
+    "Security Guards": <Users size={22} />,
+  };
+
+  const residentCards = [
+    {
+      title: "Notices",
+      subtitle: "Latest society updates",
+      icon: <Bell size={28} />,
+      color: "bg-blue-100 text-blue-600",
+      link: "/notices",
+    },
+    {
+      title: "Complaints",
+      subtitle: "Raise or track complaints",
+      icon: <ClipboardList size={28} />,
+      color: "bg-red-100 text-red-600",
+      link: "/complaints",
+    },
+    {
+      title: "Maintenance",
+      subtitle: "Bills & Payments",
+      icon: <CreditCard size={28} />,
+      color: "bg-amber-100 text-amber-600",
+      link: "/maintenance",
+    },
+    {
+      title: "Documents",
+      subtitle: "Society documents",
+      icon: <FolderOpen size={28} />,
+      color: "bg-indigo-100 text-indigo-600",
+      link: "/documents",
+    },
+    {
+      title: "Contacts",
+      subtitle: "Emergency contacts",
+      icon: <Phone size={28} />,
+      color: "bg-cyan-100 text-cyan-600",
+      link: "/contacts",
+    },
+    {
+      title: "Profile",
+      subtitle: "Manage account",
+      icon: <User size={28} />,
+      color: "bg-emerald-100 text-emerald-600",
+      link: "/profile",
+    },
+  ];
+
+  const adminCards = [
+    {
+      title: "Residents",
+      icon: <Users size={26} />,
+      link: "/admin-residents",
+    },
+    {
+      title: "Approvals",
+      icon: <FileText size={26} />,
+      link: "/admin-approvals",
+    },
+    {
+      title: "Visitors",
+      icon: <User size={26} />,
+      link: "/admin-visitors",
+    },
+    {
+      title: "Complaints",
+      icon: <ClipboardList size={26} />,
+      link: "/admin-complaints",
+    },
+    {
+      title: "Maintenance",
+      icon: <CreditCard size={26} />,
+      link: "/admin-maintenance",
+    },
+    {
+      title: "Notices",
+      icon: <Bell size={26} />,
+      link: "/admin-notices",
+    },
+    {
+      title: "Documents",
+      icon: <FolderOpen size={26} />,
+      link: "/admin-documents",
+    },
+    {
+      title: "Events",
+      icon: <CalendarDays size={26} />,
+      link: "/admin-events",
+    },
+    {
+      title: "Payments",
+      icon: <CreditCard size={26} />,
+      link: "/admin-payments",
+    },
+    {
+      title: "Notifications",
+      icon: <Bell size={26} />,
+      link: "/notifications",
+    },
+    {
+      title: "Reports",
+      icon: <FileText size={26} />,
+      link: "/admin-reports",
+    },
+    {
+      title: "Settings",
+      icon: <Menu size={26} />,
+      link: "/admin-settings",
+    },
+  ];
+
+  // Demo placeholders until backend is ready
+  const todayItems = [
+    {
+      icon: <Bell size={16} />,
+      text: "Water supply maintenance from 2 PM to 4 PM",
+    },
+    {
+      icon: <CalendarDays size={16} />,
+      text: "Society Meeting this Sunday",
+    },
+    {
+      icon: <Sparkles size={16} />,
+      text: "Ganesh Festival in 3 days",
+    },
+  ];
+
+  const celebrations = [
+    {
+      name: "Rahul Sharma",
+      type: "Birthday",
+    },
+    {
+      name: "Amit & Priya",
+      type: "Anniversary",
+    },
+  ];
+    return (
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900">
+      <Navbar />
+
+      <div className="max-w-7xl mx-auto px-6 pt-24 pb-10">
+
+        {/* Hero */}
+
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-8 text-white shadow-xl mb-8">
+
+          <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/2 h-40 w-40 rounded-full bg-cyan-300/10 blur-2xl"></div>
+
+          <div className="relative flex flex-col lg:flex-row items-center justify-between gap-8">
+
+            <div>
+
+              <p className="text-lg text-white/90">
+                {getGreeting()}
+              </p>
+
+              <h1 className="text-5xl font-bold mt-2">
+                {firstName} 👋
+              </h1>
+
+              <p className="mt-3 text-lg text-white/90">
+                Welcome back to Diamond Square
+              </p>
+
+              <p className="mt-2 text-sm text-white/70">
+                {new Date().toLocaleDateString("en-IN", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
+
+              <div className="flex flex-wrap gap-3 mt-6">
+
+                <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur">
+
+                  {user.role === "admin"
+                    ? "🛡 Administrator"
+                    : "👤 Resident"}
+
+                </span>
+
+                <span className="px-4 py-2 rounded-full bg-white/20 backdrop-blur">
+
+                  🏠 Flat{" "}
+                  {user.flat_number ||
+                    user.flatNumber ||
+                    user.flat ||
+                    "--"}
+
+                </span>
+
+              </div>
+
+            </div>
+
+            <Link
+              to="/profile"
+              className="h-28 w-28 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:scale-105 transition"
+            >
+              <User size={60} />
+            </Link>
+
+          </div>
+
+        </div>
+
+        {/* What's New Today */}
+
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md p-6 mb-8">
+
+          <div className="flex items-center gap-2 mb-5">
+
+            <Sparkles className="text-emerald-600" />
+
+            <h2 className="text-xl font-bold dark:text-white">
+              What's New Today
+            </h2>
+
+          </div>
+
+          <div className="space-y-4">
+
+            {todayItems.map((item, index) => (
+
+              <div
+                key={index}
+                className="flex items-center gap-4 rounded-xl bg-slate-50 dark:bg-slate-700 p-4"
+              >
+
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+
+                  {item.icon}
+
+                </div>
+
+                <p className="dark:text-gray-200">
+                  {item.text}
+                </p>
+
+              </div>
+
+            ))}
+
+          </div>
+
+        </div>
+
+        {/* Society Overview */}
+
+        <h2 className="text-2xl font-bold mb-5 dark:text-white">
+          Society Overview
+        </h2>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+
+          {(dashboard?.stats || []).map((item) => (
+
+            <div
+              key={item.title}
+              className="group bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+
+              <div className="flex items-center justify-between">
+
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+
+                  {statIcons[item.title]}
+
+                </div>
+
+              </div>
+
+              <h3 className="text-3xl font-bold mt-5 dark:text-white">
+
+                {loading ? "..." : item.value}
+
+              </h3>
+
+              <p className="mt-2 text-gray-500 dark:text-gray-400">
+
+                {item.title}
+
+              </p>
+
+            </div>
+
+          ))}
+
+        </div>
+
+        {/* Today's Celebrations */}
+
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-md p-6 mb-10">
+
+          <div className="flex items-center gap-2 mb-5">
+
+            <Cake className="text-pink-500" />
+
+            <h2 className="text-xl font-bold dark:text-white">
+
+              Today's Celebrations
+
+            </h2>
+
+          </div>
+
+          {celebrations.length === 0 ? (
+
+            <p className="text-gray-500">
+              No celebrations today 🎉
+            </p>
+
+          ) : (
+
+            <div className="grid md:grid-cols-2 gap-4">
+
+              {celebrations.map((person, index) => (
+
+                <div
+                  key={index}
+                  className="rounded-2xl border border-pink-100 dark:border-slate-700 bg-pink-50 dark:bg-slate-700 p-5"
+                >
+
+                  <div className="flex justify-between items-center">
+
+                    <div>
+
+                      <h3 className="font-semibold dark:text-white">
+                        {person.name}
+                      </h3>
+
+                      <p className="text-sm text-gray-500">
+                        {person.type}
+                      </p>
+
+                    </div>
+
+                    <Cake className="text-pink-500" />
+
+                  </div>
+
+                  <button className="mt-4 text-sm px-4 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition">
+
+                    Send Wishes 🎉
+
+                  </button>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>
