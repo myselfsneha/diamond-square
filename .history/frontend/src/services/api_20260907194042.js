@@ -33,6 +33,8 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    config.headers["X-App-Version"] = "1.0";
+
     return config;
   },
   (error) => Promise.reject(error)

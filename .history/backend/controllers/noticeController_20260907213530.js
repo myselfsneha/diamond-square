@@ -6,6 +6,7 @@ const db = require("../config/db");
 exports.createNotice = async (req, res) => {
   try {
     const { title, description } = req.body;
+    console.log("Creating notifications...");
 
     if (!title || !description) {
       return res.status(400).json({
@@ -16,8 +17,7 @@ exports.createNotice = async (req, res) => {
     const trimmedTitle = title.trim();
     const trimmedDescription = description.trim();
 
-    // Create notice
-    const noticeResult = await db.query(
+    const result = await db.query(
       `
       INSERT INTO notices
       (title, description, created_by)
@@ -27,16 +27,11 @@ exports.createNotice = async (req, res) => {
       [trimmedTitle, trimmedDescription, req.user.id]
     );
 
-    // Get all residents
     const users = await db.query(
   "SELECT id FROM users WHERE role = 'resident'"
 );
 
-console.log("Residents:", users.rows);
-
 for (const user of users.rows) {
-  console.log("Creating notification for:", user.id);
-
   await db.query(
     `
     INSERT INTO notifications
@@ -45,29 +40,14 @@ for (const user of users.rows) {
     `,
     [
       user.id,
-      trimmedTitle,
-      trimmedDescription,
+      "New Notice",
+      description,
       "notice",
       req.user.id,
     ]
   );
-
-  console.log("Notification created!");
 }
-
-    return res.status(201).json({
-      message: "Notice created successfully",
-      noticeId: noticeResult.rows[0].id,
-    });
-  } catch (error) {
-    console.error("Create Notice Error:", error);
-
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
 };
-
 // ==============================
 // Get All Notices
 // ==============================
@@ -86,11 +66,11 @@ exports.getAllNotices = async (req, res) => {
       ORDER BY n.created_at DESC
     `);
 
-    return res.json(rows);
+    res.json(rows);
   } catch (error) {
     console.error("Get Notices Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       message: error.message,
     });
   }
@@ -114,13 +94,13 @@ exports.deleteNotice = async (req, res) => {
       });
     }
 
-    return res.json({
+    res.json({
       message: "Notice deleted successfully",
     });
   } catch (error) {
     console.error("Delete Notice Error:", error);
 
-    return res.status(500).json({
+    res.status(500).json({
       message: error.message,
     });
   }

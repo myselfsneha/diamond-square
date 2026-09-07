@@ -183,6 +183,43 @@ exports.register = async (req, res) => {
       ]
     );
 
+    return res.status(201).json({
+      success: true,
+      message:
+        "Registration submitted successfully. Please wait for admin approval.",
+      userId: rows[0].id,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+    // Check whether this phone/email already belongs
+    // to an approved member of the same flat.
+    const { rows: existingUsers } = await db.query(
+      `
+      SELECT *
+      FROM users
+      WHERE LOWER(email)=LOWER($1)
+         OR phone=$2
+      `,
+      [email.trim(), phone.trim()]
+    );
+
+    if (existingUsers.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Resident already exists.",
+      });
+    }
+
+    // NEW: Check whether this flat already has an approved owner.
     const { rows: approvedOwners } = await db.query(
       `
       SELECT id
@@ -192,9 +229,64 @@ exports.register = async (req, res) => {
         AND approval_status='approved'
       LIMIT 1
       `,
-      [normalizedFlat]
+      [flat_number.trim().toUpperCase()]
     );
 
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain at least 8 characters.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { rows } = await db.query(
+      `
+      INSERT INTO users(
+        name,
+        email,
+        phone,
+        password,
+        role,
+        resident_type,
+        flat_number,
+        emergency_contact,
+        occupation,
+        date_of_birth,
+        anniversary_date,
+        approval_status,
+        approval_otp,
+        otp_expires_at,
+        otp_verified,
+        is_active
+      )
+      VALUES(
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+        'pending',
+        NULL,
+        NULL,
+        FALSE,
+        TRUE
+      )
+      RETURNING id
+      `,
+      [
+        name.trim(),
+        email.trim().toLowerCase(),
+        phone.trim(),
+        hashedPassword,
+        "resident",
+        resident_type.toLowerCase(),
+        flat_number.trim().toUpperCase(),
+        emergency_contact || null,
+        occupation || null,
+        date_of_birth,
+        anniversary_date || null,
+      ]
+    );
+        // If this is the first owner of the flat,
+    // they become the primary account.
     if (
       resident_type.toLowerCase() === "owner" &&
       approvedOwners.length === 0
@@ -208,6 +300,8 @@ exports.register = async (req, res) => {
       });
     }
 
+    // If another owner already exists,
+    // this person will be linked after approval.
     if (
       resident_type.toLowerCase() === "owner" &&
       approvedOwners.length > 0
@@ -221,6 +315,7 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Tenants always remain independent.
     return res.status(201).json({
       success: true,
       message:
@@ -237,7 +332,6 @@ exports.register = async (req, res) => {
     });
   }
 };
-
 exports.login = async (req, res) => {
   try {
     const { phone, password } = req.body;

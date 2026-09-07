@@ -282,24 +282,20 @@ function Dashboard() {
 
             {(dashboard?.whatsNew || []).length > 0 ? (
               <div className="space-y-3">
-                {dashboard.whatsNew.map((item) => (
+                {dashboard.latestNotices.slice(0, 3).map((notice) => (
                   <div
-                    key={item.id}
-                    className="rounded-2xl bg-emerald-50 dark:bg-slate-700 p-4"
+                    key={notice.id}
+                    className="flex gap-3 rounded-xl bg-slate-50 dark:bg-slate-700 p-4"
                   >
-                    <h3 className="font-semibold dark:text-white">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-300">
-                      {item.type}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-300">
-                      {new Date(item.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+                    <Bell className="text-emerald-600 mt-1" size={18} />
+                    <div>
+                      <h3 className="font-medium dark:text-white">
+                        {notice.title}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {new Date(notice.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>

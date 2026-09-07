@@ -2,7 +2,7 @@ const db = require("../config/db");
 
 exports.getNotifications = async (req, res) => {
   try {
-    const result = await db.query(`
+    const result = await db.query(`(`
       SELECT
         n.*,
         u.name AS created_by_name
@@ -14,7 +14,7 @@ exports.getNotifications = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      notifications: result.rows,
+      notifications,
     });
   } catch (error) {
     console.error("Get Notifications Error:", error);
@@ -261,7 +261,7 @@ exports.getNotificationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await db.query(
+    const [notifications] = await db.query(
       `
       SELECT
         n.*,
@@ -274,7 +274,7 @@ exports.getNotificationById = async (req, res) => {
       [id]
     );
 
-    if (result.rows.length === 0) {
+    if (!notifications.length) {
       return res.status(404).json({
         success: false,
         message: "Notification not found.",
@@ -283,7 +283,7 @@ exports.getNotificationById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      notification: result.rows[0],
+      notification: notifications[0],
     });
   } catch (error) {
     console.error("Get Notification Error:", error);

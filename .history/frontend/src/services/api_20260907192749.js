@@ -11,6 +11,8 @@ const BASE_URL =
   process.env.REACT_APP_API_URL ||
   "http://localhost:5000/api";
 
+console.log("API URL:", BASE_URL);
+
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
@@ -32,6 +34,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    config.headers["X-App-Version"] = "1.0";
 
     return config;
   },

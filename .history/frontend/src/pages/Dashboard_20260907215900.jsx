@@ -283,23 +283,15 @@ function Dashboard() {
             {(dashboard?.whatsNew || []).length > 0 ? (
               <div className="space-y-3">
                 {dashboard.whatsNew.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl bg-emerald-50 dark:bg-slate-700 p-4"
-                  >
-                    <h3 className="font-semibold dark:text-white">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-300">
-                      {item.type}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-300">
-                      {new Date(item.date).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
+  <div key={item.id}>
+    <h3>{item.title}</h3>
+    <p>{item.type}</p>
+    <p>{new Date(item.date).toLocaleDateString("en-IN", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+})</p>
+  </div>
                   </div>
                 ))}
               </div>

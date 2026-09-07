@@ -261,7 +261,7 @@ exports.getNotificationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await db.query(
+    const [notifications] = await db.query(
       `
       SELECT
         n.*,
@@ -283,7 +283,7 @@ exports.getNotificationById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      notification: result.rows[0],
+      notification: result.rows[0],,
     });
   } catch (error) {
     console.error("Get Notification Error:", error);

@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     const uniqueName =
       Date.now() +
       "-" +
-      crypto.randomInt(1e9) +
+      Math.round(Math.random() * 1e9) +
       path.extname(file.originalname);
 
     cb(null, uniqueName);

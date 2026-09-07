@@ -86,7 +86,16 @@ function Events() {
 
   const fetchEvents = async () => {
     try {
-      const res = await api.get("/events");
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/events`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setEvents(res.data.events || []);
     } catch (err) {

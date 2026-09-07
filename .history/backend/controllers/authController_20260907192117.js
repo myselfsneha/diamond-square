@@ -238,6 +238,99 @@ exports.register = async (req, res) => {
   }
 };
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const { rows } = await db.query(
+      `
+      INSERT INTO users(
+        name,
+        email,
+        phone,
+        password,
+        role,
+        resident_type,
+        flat_number,
+        emergency_contact,
+        occupation,
+        date_of_birth,
+        anniversary_date,
+        approval_status,
+        approval_otp,
+        otp_expires_at,
+        otp_verified,
+        is_active
+      )
+      VALUES(
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,
+        'pending',
+        NULL,
+        NULL,
+        FALSE,
+        TRUE
+      )
+      RETURNING id
+      `,
+      [
+        name.trim(),
+        email.trim().toLowerCase(),
+        phone.trim(),
+        hashedPassword,
+        "resident",
+        resident_type.toLowerCase(),
+        flat_number.trim().toUpperCase(),
+        emergency_contact || null,
+        occupation || null,
+        date_of_birth,
+        anniversary_date || null,
+      ]
+    );
+        // If this is the first owner of the flat,
+    // they become the primary account.
+    if (
+      resident_type.toLowerCase() === "owner" &&
+      approvedOwners.length === 0
+    ) {
+      return res.status(201).json({
+        success: true,
+        message:
+          "Registration submitted successfully. Please wait for admin approval.",
+        userId: rows[0].id,
+        isPrimaryOwner: true,
+      });
+    }
+
+    // If another owner already exists,
+    // this person will be linked after approval.
+    if (
+      resident_type.toLowerCase() === "owner" &&
+      approvedOwners.length > 0
+    ) {
+      return res.status(201).json({
+        success: true,
+        message:
+          "Registration submitted. If your details match an existing family member after admin approval, you'll automatically use the same household dashboard.",
+        userId: rows[0].id,
+        isPrimaryOwner: false,
+      });
+    }
+
+    // Tenants always remain independent.
+    return res.status(201).json({
+      success: true,
+      message:
+        "Tenant registration submitted successfully. Please wait for admin approval.",
+      userId: rows[0].id,
+      isPrimaryOwner: false,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 exports.login = async (req, res) => {
   try {
     const { phone, password } = req.body;

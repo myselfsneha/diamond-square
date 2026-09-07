@@ -29,31 +29,26 @@ exports.createNotice = async (req, res) => {
 
     // Get all residents
     const users = await db.query(
-  "SELECT id FROM users WHERE role = 'resident'"
-);
+      `SELECT id FROM users WHERE role = 'resident'`
+    );
 
-console.log("Residents:", users.rows);
-
-for (const user of users.rows) {
-  console.log("Creating notification for:", user.id);
-
-  await db.query(
-    `
-    INSERT INTO notifications
-    (resident_id, title, message, type, created_by)
-    VALUES ($1, $2, $3, $4, $5)
-    `,
-    [
-      user.id,
-      trimmedTitle,
-      trimmedDescription,
-      "notice",
-      req.user.id,
-    ]
-  );
-
-  console.log("Notification created!");
-}
+    // Create notification for every resident
+    for (const user of users.rows) {
+      await db.query(
+        `
+        INSERT INTO notifications
+        (resident_id, title, message, type, created_by)
+        VALUES ($1, $2, $3, $4, $5)
+        `,
+        [
+          user.id,
+          "New Notice",
+          trimmedTitle,
+          "notice",
+          req.user.id,
+        ]
+      );
+    }
 
     return res.status(201).json({
       message: "Notice created successfully",

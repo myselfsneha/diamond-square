@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const fs = require("node:fs");
-const path = require("node:path");
+const path = require("path");
 
 // ==============================
 // Get All Documents

@@ -261,7 +261,7 @@ exports.getNotificationById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await db.query(
+    const [notifications] = await db.query(
       `
       SELECT
         n.*,
