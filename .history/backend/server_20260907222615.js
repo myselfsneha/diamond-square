@@ -40,17 +40,17 @@ console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "Loaded" : "Missing");
 // Middleware
 // ==========================
 
-const allowedOrigins = new Set([
+const allowedOrigins = [
   "http://localhost:3000",
   "https://diamond-square.vercel.app",
-]);
+];
 
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.has(origin)) {
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
